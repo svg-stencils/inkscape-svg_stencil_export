@@ -15,6 +15,8 @@ class Options():
         self.current_file = batch_exporter.options.input_file
 
         self.stencil_name = batch_exporter.options.stencil_name
+        self.base_url = batch_exporter.options.base_url
+
         # Controls page
         self.export_type = batch_exporter.options.export_type
         self.output_path = os.path.normpath(batch_exporter.options.path)
@@ -58,6 +60,7 @@ class Options():
         print =  "===> EXTENSION PARAMETERS\n"
         print += "\n======> Controls page\n"
         print += "Stencil name: {}\n".format(self.stencil_name)
+        print += "Base url: {}\n".format(self.base_url)
         print += "Current file: {}\n".format(self.current_file)
         print += "Export type: {}\n".format(self.export_type)
         print += "Path: {}\n".format(self.output_path)
@@ -98,6 +101,7 @@ class BatchExporter(inkex.Effect):
 
         # Controls page
         self.arg_parser.add_argument("--stencil-name", action="store", type=str, dest="stencil_name", default="no-name", help="")
+        self.arg_parser.add_argument("--base-url", action="store", type=str, dest="base_url", default="", help="")
 
         # Controls page
         self.arg_parser.add_argument("--export-type", action="store", type=str, dest="export_type", default="svg", help="")
@@ -197,7 +201,7 @@ class BatchExporter(inkex.Effect):
         # write_json
 
         destination_json = os.path.join(options.output_path, "stencil-meta.json")
-        stencil_dict = {"name": options.stencil_name, "components": components_list }
+        stencil_dict = {"name": options.stencil_name, "base_url": options.base_url, "components": components_list }
 
         with open(destination_json, 'w') as json_file:
             json.dump(stencil_dict, json_file)
