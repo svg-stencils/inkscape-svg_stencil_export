@@ -7,9 +7,9 @@
   <label>Export each layer as a different file.</label>
   <param name="tab" type="notebook">
 
-    <page name="Stencil Meta" gui-text="Controls">
+    <page name="Stencil Meta" gui-text="Stencil Meta">
       <label indent="1">Stencil name</label>
-      <param name="stencil-name" type="string" gui-text="" indent="1"></param>
+      <param name="stencil-name" type="string" gui-text="" indent="1">No name</param>
 
     </page>
 

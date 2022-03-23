@@ -11,45 +11,43 @@ import logging
 import json
 
 class Options():
-    def __init__(self, svg_stencil_export):
-        self.current_file = svg_stencil_export.options.input_file
+    def __init__(self, batch_exporter):
+        self.current_file = batch_exporter.options.input_file
 
-        # Meta page
-        self.stencil_name = svg_stencil_export.options.stencil_name
-
+        self.stencil_name = batch_exporter.options.stencil_name
         # Controls page
-        self.export_type = svg_stencil_export.options.export_type
-        self.output_path = os.path.normpath(svg_stencil_export.options.path)
-        self.use_background_layers = self._str_to_bool(svg_stencil_export.options.use_background_layers)
-        self.skip_hidden_layers = self._str_to_bool(svg_stencil_export.options.skip_hidden_layers)
-        self.overwrite_files = self._str_to_bool(svg_stencil_export.options.overwrite_files)
-        self.export_plain_svg = self._str_to_bool(svg_stencil_export.options.export_plain_svg)
-        self.using_clones = self._str_to_bool(svg_stencil_export.options.using_clones)
-        hierarchical_layers = svg_stencil_export.options.hierarchical_layers
+        self.export_type = batch_exporter.options.export_type
+        self.output_path = os.path.normpath(batch_exporter.options.path)
+        self.use_background_layers = self._str_to_bool(batch_exporter.options.use_background_layers)
+        self.skip_hidden_layers = self._str_to_bool(batch_exporter.options.skip_hidden_layers)
+        self.overwrite_files = self._str_to_bool(batch_exporter.options.overwrite_files)
+        self.export_plain_svg = self._str_to_bool(batch_exporter.options.export_plain_svg)
+        self.using_clones = self._str_to_bool(batch_exporter.options.using_clones)
+        hierarchical_layers = batch_exporter.options.hierarchical_layers
         self.hierarchical_layers = False
         if hierarchical_layers == "hierarchical":
             self.hierarchical_layers = True
 
-        self.export_pdf_version = svg_stencil_export.options.export_pdf_version
+        self.export_pdf_version = batch_exporter.options.export_pdf_version
 
         # Export size page
-        self.export_area_type = svg_stencil_export.options.export_area_type
-        self.export_area_size = svg_stencil_export.options.export_area_size
-        self.export_res_type = svg_stencil_export.options.export_res_type
-        self.export_res_dpi = svg_stencil_export.options.export_res_dpi
-        self.export_res_width = svg_stencil_export.options.export_res_width
-        self.export_res_height = svg_stencil_export.options.export_res_height
+        self.export_area_type = batch_exporter.options.export_area_type
+        self.export_area_size = batch_exporter.options.export_area_size
+        self.export_res_type = batch_exporter.options.export_res_type
+        self.export_res_dpi = batch_exporter.options.export_res_dpi
+        self.export_res_width = batch_exporter.options.export_res_width
+        self.export_res_height = batch_exporter.options.export_res_height
 
         # File naming page
-        self.naming_scheme = svg_stencil_export.options.naming_scheme
-        self.use_number_prefix = self._str_to_bool(svg_stencil_export.options.use_number_prefix)
-        self.name_template = svg_stencil_export.options.name_template
+        self.naming_scheme = batch_exporter.options.naming_scheme
+        self.use_number_prefix = self._str_to_bool(batch_exporter.options.use_number_prefix)
+        self.name_template = batch_exporter.options.name_template
 
         # Help page
-        self.use_logging = self._str_to_bool(svg_stencil_export.options.use_logging)
+        self.use_logging = self._str_to_bool(batch_exporter.options.use_logging)
         if self.use_logging:
-            self.log_path = os.path.expanduser(svg_stencil_export.options.log_path)
-            self.overwrite_log = self._str_to_bool(svg_stencil_export.options.overwrite_log)
+            self.log_path = os.path.expanduser(batch_exporter.options.log_path)
+            self.overwrite_log = self._str_to_bool(batch_exporter.options.overwrite_log)
             log_file_name = os.path.join(self.log_path, 'batch_export.log')
             if self.overwrite_log and os.path.exists(log_file_name):
                 logging.basicConfig(filename=log_file_name, filemode="w", level=logging.DEBUG)
@@ -59,8 +57,8 @@ class Options():
     def __str__(self):
         print =  "===> EXTENSION PARAMETERS\n"
         print += "\n======> Controls page\n"
-        print += "Current file: {}\n".format(self.current_file)
         print += "Stencil name: {}\n".format(self.stencil_name)
+        print += "Current file: {}\n".format(self.current_file)
         print += "Export type: {}\n".format(self.export_type)
         print += "Path: {}\n".format(self.output_path)
         print += "Use background layers: {}\n".format(self.use_background_layers)
@@ -93,13 +91,13 @@ class Options():
             return True
         return False
 
-class SVGStencilExport(inkex.Effect):
+class BatchExporter(inkex.Effect):
     def __init__(self):
         """init the effetc library and get options from gui"""
         inkex.Effect.__init__(self)
 
         # Controls page
-        self.arg_parser.add_argument("--stencil_name", action="store", type=str, dest="stencil_name", default="", help="")
+        self.arg_parser.add_argument("--stencil-name", action="store", type=str, dest="stencil_name", default="no-name", help="")
 
         # Controls page
         self.arg_parser.add_argument("--export-type", action="store", type=str, dest="export_type", default="svg", help="")
@@ -141,13 +139,13 @@ class SVGStencilExport(inkex.Effect):
         options = Options(self)
         logging.debug(options)
 
+        components_list = []
+
         # Build the partial inkscape export command
         command = self.build_partial_command(options)
 
         # Get the layers from the current file
         layers = self.get_layers(options.skip_hidden_layers, options.use_background_layers)
-
-        components_list = []
 
         # For each layer export a file
         for (layer_id, layer_label, layer_type, parents) in layers:
@@ -172,12 +170,12 @@ class SVGStencilExport(inkex.Effect):
             file_name = "{}.{}".format(file_name, options.export_type)
             logging.debug("  File name: {}".format(file_name))
 
-            # Check if the file exists. If not, export it.
-            destination_path = os.path.join(options.output_path, file_name)
-
             # Add to components for meta json
             components_list.append(file_name)
 
+
+            # Check if the file exists. If not, export it.
+            destination_path = os.path.join(options.output_path, file_name)
             if not options.overwrite_files and os.path.exists(destination_path):
                 logging.debug("  File already exists: {}\n".format(file_name))
                 # TODO: Should this be the expected functionality of this scenario?
@@ -196,14 +194,13 @@ class SVGStencilExport(inkex.Effect):
             os.remove(temporary_file_path)
 
             counter += 1
-
         # write_json
 
-#        destination_json = os.path.join(options.output_path, "stencil-meta.json")
-#        stencil_dict = {"name": options.stencil_name, "components": components_list }
-#
-#        with open(destination_json, 'w') as json_file:
-#              json.dump(stencil_dict, json_file)
+        destination_json = os.path.join(options.output_path, "stencil-meta.json")
+        stencil_dict = {"name": options.stencil_name, "components": components_list }
+
+        with open(destination_json, 'w') as json_file:
+            json.dump(stencil_dict, json_file)
 
 
     def get_layers(self, skip_hidden_layers, use_background_layers):
@@ -354,7 +351,8 @@ class SVGStencilExport(inkex.Effect):
             exit()
 
 def _main():
-    exporter = SVGStencilExport()
+    exporter = BatchExporter()
+    exporter.run()
     exit()
 
 if __name__ == "__main__":
