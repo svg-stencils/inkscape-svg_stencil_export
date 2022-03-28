@@ -198,13 +198,20 @@ class BatchExporter(inkex.Effect):
             os.remove(temporary_file_path)
 
             counter += 1
-        # write_json
 
-        destination_json = os.path.join(options.output_path, "stencil-meta.json")
-        stencil_dict = {"name": options.stencil_name, "base_url": options.base_url, "components": components_list }
+        # write_json's
 
-        with open(destination_json, 'w') as json_file:
-            json.dump(stencil_dict, json_file)
+        destination_comp_json = os.path.join(options.output_path, "stencil-components.json")
+        stencil_comp_dict = { "components": components_list }
+
+        with open(destination_comp_json, 'w') as json_file:
+            json.dump(stencil_comp_dict, json_file)
+
+        destination_meta_json = os.path.join(options.output_path, "stencil-meta.json")
+        stencil_meta_dict = { "name": options.stencil_name, "base_url": options.base_url }
+
+        with open(destination_meta_json, 'w') as json_file:
+            json.dump(stencil_meta_dict, json_file)
 
 
     def get_layers(self, skip_hidden_layers, use_background_layers):
