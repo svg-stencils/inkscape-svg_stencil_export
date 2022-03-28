@@ -7,51 +7,52 @@
   <label>Export each layer as a component file.</label>
   <param name="tab" type="notebook">
 
-    <page name="Stencil Meta" gui-text="Stencil Meta">
+    <page name="components" gui-text="Export Components">
+
+      <label indent="1">Export path:</label>
+      <param name="path" type="path" mode="folder" gui-text="" indent="1"/>
+
+      <separator/>
+      <spacer/>
+
+      <param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>
+      <param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>
+
+      <param name="overwrite-files" type="bool" gui-text="Overwrite existing component files" indent="1">true</param>
+
+      <param name="write-components" type="bool" gui-text="Write stencil-components.json" indent="1">true</param>
+
+    </page>
+
+    <page name="meta" gui-text="Meta Information">
+
+      <param name="write-meta" type="bool" gui-text="Write stencil-meta.json" indent="1">false</param>
+
+      <separator/>
+      <spacer/>
 
       <label indent="1">Stencil name</label>
       <param name="stencil-name" type="string" gui-text="" indent="1">Unknown</param>
 
       <label indent="1">BaseURL used to prefix the component files.</label>
-      <param name="base-url" type="string" gui-text="" indent="1">https://mystencil.org/components</param>
+      <param name="base-url" type="string" gui-text="" indent="1">https://mystencil.org</param>
 
-      <!--
-      <label indent="1">Homepage</label>
-      <param name="Homepage" type="string" gui-text="" indent="1">https://mystencil.org</param>
+      <label indent="1">Stencil Homepage</label>
+      <param name="stencil-homepage" type="string" gui-text="" indent="1">https://mystencil.org</param>
 
       <label indent="1">Description</label>
       <param name="stencil-description" appearance="multiline" type="string" gui-text="" indent="1">Stencils to be used for...</param>
 
-      <label indent="1">Licence URL</label>
-        <param name="stencil-licence-URL" type="string" gui-text="" indent="1">https://creativecommons.org/publicdomain/zero/1.0/</param>
+      <label indent="1">License URL</label>
+      <param name="stencil-license-url" type="string" gui-text="" indent="1">https://creativecommons.org/publicdomain/zero/1.0/</param>
 
-      -->
+    </page>
 
-      <separator/>
-      <spacer/>
+    <page name="github" gui-text="GitHub Pages">
 
-      <label indent="1">Export path:</label>
-      <param name="path" type="path" mode="folder" gui-text="" indent="1"/>
-      <separator/>
-      <spacer/>
-
-      <label appearance="header">Other options</label>
-      <separator/>
-      <param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>
-      <param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>
-
-      <separator/>
-      <param name="overwrite-files" type="bool" gui-text="Overwrite existing component files" indent="1">true</param>
-
-      <!--
-      <param name="write-meta" type="bool" gui-text="Write stencil-meta.json" indent="1">true</param>
-      <param name="write-components" type="bool" gui-text="Write stencil-components.json" indent="1">true</param>
-
-      <param name="create-github-action" type="bool" gui-text="Create GitHub Pages Workflow" indent="1">false</param>
+      <param name="create-github-action" type="bool" gui-text="Create GitHub Pages Action Workflow" indent="1">false</param>
       <param name="create-cover-page" type="bool" gui-text="Create Components Cover Page (index.html)" indent="1">false</param>
-        <param name="create-readme" type="bool" gui-text="Create README.md" indent="1">false</param>
-      -->
-
+      <param name="create-readme" type="bool" gui-text="Create README.md" indent="1">false</param>
     </page>
 
     <page name="advanced" gui-text="Advanced">

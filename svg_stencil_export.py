@@ -16,8 +16,16 @@ class Options():
 
         self.stencil_name = batch_exporter.options.stencil_name
         self.base_url = batch_exporter.options.base_url
+        self.stencil_homepage = batch_exporter.options.stencil_homepage
+        self.stencil_description = batch_exporter.options.stencil_description
+        self.stencil_license_url = batch_exporter.options.stencil_license_url
 
-        # Controls page
+        self.create_github_action = self._str_to_bool(batch_exporter.options.create_github_action)
+        self.write_meta = self._str_to_bool(batch_exporter.options.write_meta)
+        self.write_components = self._str_to_bool(batch_exporter.options.write_components)
+        self.create_cover_page = self._str_to_bool(batch_exporter.options.create_cover_page)
+        self.create_readme = self._str_to_bool(batch_exporter.options.create_readme)
+
         self.export_type = batch_exporter.options.export_type
         self.output_path = os.path.normpath(batch_exporter.options.path)
         self.use_background_layers = self._str_to_bool(batch_exporter.options.use_background_layers)
@@ -102,11 +110,21 @@ class BatchExporter(inkex.Effect):
         # Controls page
         self.arg_parser.add_argument("--stencil-name", action="store", type=str, dest="stencil_name", default="no-name", help="")
         self.arg_parser.add_argument("--base-url", action="store", type=str, dest="base_url", default="", help="")
+        self.arg_parser.add_argument("--stencil-homepage", action="store", type=str, dest="stencil_homepage", default="", help="")
+        self.arg_parser.add_argument("--stencil-description", action="store", type=str, dest="stencil_description", default="", help="")
+        self.arg_parser.add_argument("--stencil-license-url", action="store", type=str, dest="stencil_license_url", default="", help="")
 
         # Controls page
         self.arg_parser.add_argument("--export-type", action="store", type=str, dest="export_type", default="svg", help="")
         self.arg_parser.add_argument("--path", action="store", type=str, dest="path", default="", help="export path")
         self.arg_parser.add_argument("--use-background-layers", action="store", type=str, dest="use_background_layers", default=False, help="")
+
+        self.arg_parser.add_argument("--write-meta", action="store", type=str, dest="write_meta", default=False, help="")
+        self.arg_parser.add_argument("--write-components", action="store", type=str, dest="write_components", default=False, help="")
+        self.arg_parser.add_argument("--create-github-action", action="store", type=str, dest="create_github_action", default=False, help="")
+        self.arg_parser.add_argument("--create-cover-page", action="store", type=str, dest="create_cover_page", default=False, help="")
+        self.arg_parser.add_argument("--create-readme", action="store", type=str, dest="create_readme", default=False, help="")
+
         self.arg_parser.add_argument("--skip-hidden-layers", action="store", type=str, dest="skip_hidden_layers", default=False, help="")
         self.arg_parser.add_argument("--overwrite-files", action="store", type=str, dest="overwrite_files", default=False, help="")
         self.arg_parser.add_argument("--export-plain-svg", action="store", type=str, dest="export_plain_svg", default=False, help="")
@@ -135,6 +153,7 @@ class BatchExporter(inkex.Effect):
         # HACK - the script is called with a "--tab controls" option as an argument from the notebook param in the inx file.
         # This argument is not used in the script. It's purpose is to suppress an error when the script is called.
         self.arg_parser.add_argument("--tab", action="store", type=str, dest="tab", default="controls", help="")
+
 
     def effect(self):
         counter = 1
@@ -201,17 +220,108 @@ class BatchExporter(inkex.Effect):
 
         # write_json's
 
-        destination_comp_json = os.path.join(options.output_path, "stencil-components.json")
-        stencil_comp_dict = { "components": components_list }
+        if options.write_components:
+            destination_comp_json = os.path.join(options.output_path, "stencil-components.json")
+            stencil_comp_dict = { "components": components_list }
 
-        with open(destination_comp_json, 'w') as json_file:
-            json.dump(stencil_comp_dict, json_file)
+            with open(destination_comp_json, 'w') as json_file:
+                json.dump(stencil_comp_dict, json_file)
 
-        destination_meta_json = os.path.join(options.output_path, "stencil-meta.json")
-        stencil_meta_dict = { "name": options.stencil_name, "base_url": options.base_url }
+        if options.write_meta:
+            destination_meta_json = os.path.join(options.output_path, "stencil-meta.json")
+            stencil_meta_dict = {
+                    "name": options.stencil_name,
+                    "base_url": options.base_url,
+                    "description": options.stencil_description,
+                    "homepage": options.stencil_homepage,
+                    "license": options.stencil_license_url,
+                    }
 
-        with open(destination_meta_json, 'w') as json_file:
-            json.dump(stencil_meta_dict, json_file)
+            with open(destination_meta_json, 'w') as json_file:
+                json.dump(stencil_meta_dict, json_file)
+
+        if options.create_github_action:
+            ghdir = os.path.join(options.output_path, ".github", "workflows" )
+            os.makedirs( ghdir, exist_ok=True )
+
+            gh_action_yaml = """name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Set a branch name to trigger deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true  # Fetch Hugo themes (true OR recursive)
+          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+
+
+"""
+            destination_gh_action_yaml = os.path.join(ghdir , "gh-pahes.yml")
+
+            ymlfile = open(destination_gh_action_yaml, 'w')
+            ymlfile.write(gh_action_yaml)
+            ymlfile.close()
+
+        if options.create_readme:
+
+            indexmd = f"""
+# {options.stencil_name}
+
+{options.stencil_description}
+
+License: {options.stencil_license_url}
+"""
+            destination_indexmd = os.path.join(options.output_path , "readme.md")
+
+            mdfile = open(destination_indexmd, 'w')
+            mdfile.write(indexmd)
+            mdfile.close()
+
+
+        if options.create_cover_page:
+
+            compstr=""
+            for comp in components_list:
+                compstr=compstr+'<div class="col-sm"> <img style="max-width:200px;" class="img-thumbnail" src="'+comp+'" /></div>'
+
+            indexhtml = f"""
+<html>
+<head>
+<title>{options.stencil_name}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+</head>
+<body>
+<h1>{options.stencil_name}</h1>
+<p>{options.stencil_description}</p>
+<p><a href="{options.stencil_license_url}">License</a></p>
+<div class="container-fluid">
+<div class="row">
+{compstr}
+</div>
+</div>
+</body>
+</html>
+"""
+            destination_indexhtml = os.path.join(options.output_path , "index.html")
+
+            htmlfile = open(destination_indexhtml, 'w')
+            htmlfile.write(indexhtml)
+            htmlfile.close()
 
 
     def get_layers(self, skip_hidden_layers, use_background_layers):
