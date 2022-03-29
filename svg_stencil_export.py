@@ -21,6 +21,7 @@ class Options():
         self.stencil_license_url = batch_exporter.options.stencil_license_url
 
         self.create_github_action = self._str_to_bool(batch_exporter.options.create_github_action)
+        self.create_gitlab_action = self._str_to_bool(batch_exporter.options.create_gitlab_action)
         self.write_meta = self._str_to_bool(batch_exporter.options.write_meta)
         self.write_components = self._str_to_bool(batch_exporter.options.write_components)
         self.create_cover_page = self._str_to_bool(batch_exporter.options.create_cover_page)
@@ -122,6 +123,7 @@ class BatchExporter(inkex.Effect):
         self.arg_parser.add_argument("--write-meta", action="store", type=str, dest="write_meta", default=False, help="")
         self.arg_parser.add_argument("--write-components", action="store", type=str, dest="write_components", default=False, help="")
         self.arg_parser.add_argument("--create-github-action", action="store", type=str, dest="create_github_action", default=False, help="")
+        self.arg_parser.add_argument("--create-gitlab-action", action="store", type=str, dest="create_gitlab_action", default=False, help="")
         self.arg_parser.add_argument("--create-cover-page", action="store", type=str, dest="create_cover_page", default=False, help="")
         self.arg_parser.add_argument("--create-readme", action="store", type=str, dest="create_readme", default=False, help="")
 
@@ -240,6 +242,7 @@ class BatchExporter(inkex.Effect):
             with open(destination_meta_json, 'w') as json_file:
                 json.dump(stencil_meta_dict, json_file)
 
+
         if options.create_github_action:
             ghdir = os.path.join(options.output_path, ".github", "workflows" )
             os.makedirs( ghdir, exist_ok=True )
@@ -269,12 +272,31 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .
 
-
 """
-            destination_gh_action_yaml = os.path.join(ghdir , "gh-pahes.yml")
+            destination_gh_action_yaml = os.path.join(ghdir , "gh-pages.yml")
 
             ymlfile = open(destination_gh_action_yaml, 'w')
             ymlfile.write(gh_action_yaml)
+            ymlfile.close()
+
+        if options.create_gitlab_action:
+            gl_action_yaml = """pages:
+  stage: deploy
+  script:
+    - mkdir .public
+    - cp -r * .public
+    - rm -rf public
+    - mv .public public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+"""
+            destination_gl_action_yaml = os.path.join(options.output_path , ".gitlab-ci.yml")
+
+            ymlfile = open(destination_gl_action_yaml, 'w')
+            ymlfile.write(gl_action_yaml)
             ymlfile.close()
 
         if options.create_readme:

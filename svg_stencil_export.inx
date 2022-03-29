@@ -9,6 +9,10 @@
 
     <page name="components" gui-text="Export Components">
 
+      <param name="write-components" type="bool" gui-text="Write stencil-components.json" indent="1">true</param>
+      <separator/>
+      <spacer/>
+
       <label indent="1">Export path:</label>
       <param name="path" type="path" mode="folder" gui-text="" indent="1"/>
 
@@ -17,10 +21,7 @@
 
       <param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>
       <param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>
-
       <param name="overwrite-files" type="bool" gui-text="Overwrite existing component files" indent="1">true</param>
-
-      <param name="write-components" type="bool" gui-text="Write stencil-components.json" indent="1">true</param>
 
     </page>
 
@@ -35,7 +36,7 @@
       <param name="stencil-name" type="string" gui-text="" indent="1">Unknown</param>
 
       <label indent="1">BaseURL used to prefix the component files.</label>
-      <param name="base-url" type="string" gui-text="" indent="1">https://mystencil.org</param>
+      <param name="base-url" type="string" gui-text="" indent="1" gui-hidden="true">https://mystencil.org</param>
 
       <label indent="1">Stencil Homepage</label>
       <param name="stencil-homepage" type="string" gui-text="" indent="1">https://mystencil.org</param>
@@ -48,11 +49,13 @@
 
     </page>
 
-    <page name="github" gui-text="GitHub Pages">
+    <page name="github" gui-text="Publish">
 
-      <param name="create-github-action" type="bool" gui-text="Create GitHub Pages Action Workflow" indent="1">false</param>
       <param name="create-cover-page" type="bool" gui-text="Create Components Cover Page (index.html)" indent="1">false</param>
       <param name="create-readme" type="bool" gui-text="Create README.md" indent="1">false</param>
+
+      <param name="create-github-action" type="bool" gui-text="Create GitHub Pages Action Workflow" indent="1">false</param>
+      <param name="create-gitlab-action" type="bool" gui-text="Create GitLab Pages CI file" indent="1">false</param>
     </page>
 
     <page name="advanced" gui-text="Advanced">
