@@ -323,20 +323,23 @@ License: {options.stencil_license_url}
 
             indexhtml = f"""
 <html>
-<head>
-<title>{options.stencil_name}</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-</head>
-<body>
-<h1>{options.stencil_name}</h1>
-<p>{options.stencil_description}</p>
-<p><a href="{options.stencil_license_url}">License</a></p>
-<div class="container-fluid">
-<div class="row">
-{compstr}
-</div>
-</div>
-</body>
+    <head>
+        <title>{options.stencil_name}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row m-3">
+                <h1>{options.stencil_name}</h1>
+                <p>{options.stencil_description}</p>
+                <p><a href="{options.stencil_license_url}">License</a></p>
+            </div>
+
+            <div class="row m-3">
+                {compstr}
+            </div>
+        </div>
+    </body>
 </html>
 """
             destination_indexhtml = os.path.join(options.output_path , "index.html")
