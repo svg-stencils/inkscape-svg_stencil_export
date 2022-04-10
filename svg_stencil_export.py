@@ -192,7 +192,7 @@ class BatchExporter(inkex.Effect):
                 file_name = self.get_simple_name(options.use_number_prefix, counter, layer_label)
             else:
                 file_name = self.get_advanced_name(options.name_template, counter, layer_label)
-            file_name = "{}.{}".format(file_name, options.export_type)
+            file_name = "{}.{}".format(file_name, options.export_type.lower())
             logging.debug("  File name: {}".format(file_name))
 
             # Add to components for meta json
