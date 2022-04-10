@@ -6,4 +6,4 @@ copy2inkscape:
 	cp ./*.inx ./*.py ~/.config/inkscape/extensions
 
 zip:
-	zip -r ./$(ZIPNAME) ./* -x ./$(ZIPNAME)
+	zip -rj ./$(ZIPNAME) ./* -x ./$(ZIPNAME) -x ./*.png
