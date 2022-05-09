@@ -12,6 +12,12 @@ import json
 
 class Options():
     def __init__(self, batch_exporter):
+
+        self.mostLeft = 0
+        self.mostRight = 0
+        self.mostTop = 0
+        self.mostBottom = 0
+
         self.current_file = batch_exporter.options.input_file
 
         self.stencil_name = batch_exporter.options.stencil_name
@@ -463,45 +469,45 @@ License: {options.stencil_license_url}
             target_layer.attrib['style'] = 'display:inline'
             root.append(target_layer)
 
-
-        mostLeft = 0
-        mostRight = 0
-        mostTop = 0
-        mostBottom = 0
+        self.mostLeft = 0
+        self.mostRight = 0
+        self.mostTop = 0
+        self.mostBottom = 0
 
         for node in target_layer.iterchildren():
-            logging.debug(node.get("id"))
-            #Split the string with the espace character, thus getting an array of the actual SVG commands
-
-            if node.get("width"):
-                if mostRight == 0 or (node.get("x") + node.get("width")) > mostRight:
-                    mostRight = node.get("x")+node.get("width")
-
-                if mostBottom == 0 or (node.get("y") + node.get("height")) > mostBottom:
-                    mostBottom = node.get("y")+node.get("height")
-
-                if mostLeft == 0 or node.get("x") < mostLeft:
-                    mostLeft = node.get("x")
-
-                if mostTop == 0 or node.get("y") < mostTop:
-                    mostTop = node.get("y")
-
+            self.analyseNode(node)
 
         # Save the data in a temporary file
         with tempfile.NamedTemporaryFile(delete=False) as temporary_file:
 
             tfile = {
                     "name" : temporary_file.name,
-                    "left" : self.makeFloat(mostLeft),
-                    "top" : self.makeFloat(mostTop),
-                    "right" : self.makeFloat(mostRight),
-                    "bottom" : self.makeFloat(mostBottom)
+                    "left" : self.makeFloat(self.mostLeft),
+                    "top" : self.makeFloat(self.mostTop),
+                    "right" : self.makeFloat(self.mostRight),
+                    "bottom" : self.makeFloat(self.mostBottom)
                     }
 
 
             logging.debug("    Creating temp file {}".format(temporary_file.name))
             doc.write(temporary_file.name)
             return tfile
+
+
+    def analyseNode(self, node):
+
+        bbox = node.bounding_box()
+        if self.mostRight == 0 or (bbox.left + bbox.width) > self.mostRight:
+            self.mostRight = bbox.left + bbox.width
+
+        if self.mostBottom == 0 or (bbox.top + bbox.height) > self.mostBottom:
+            self.mostBottom = bbox.top + bbox.height
+
+        if self.mostLeft == 0 or bbox.left < self.mostLeft:
+            self.mostLeft = bbox.left
+
+        if self.mostTop == 0 or bbox.top < self.mostTop:
+            self.mostTop = bbox.top
 
     def makeFloat(self, var):
         if var is None:
@@ -513,6 +519,12 @@ License: {options.stencil_license_url}
                 var = float(arr[0] +"."+ arr[1])
 
         return round(float(var),2)
+
+    def imageDim(self, background_image):
+        bbox_x = background_image.bounding_box().left
+        bbox_y = background_image.bounding_box().top
+        bbox_width = background_image.bounding_box().width
+        bbox_height = background_image.bounding_box().height
 
 
 
