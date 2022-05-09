@@ -232,7 +232,6 @@ class BatchExporter(inkex.Effect):
             destination_comp_json = os.path.join(options.output_path, "stencil-components.json")
             stencil_comp_dict = {
                     "components": components_list,
-                    "hallo" : "jojo",
                     "components_data" : components_data
                     }
 
@@ -469,31 +468,23 @@ License: {options.stencil_license_url}
         mostRight = 0
         mostTop = 0
         mostBottom = 0
+
         for node in target_layer.iterchildren():
             logging.debug(node.get("id"))
             #Split the string with the espace character, thus getting an array of the actual SVG commands
 
-            if mostLeft == 0 or node.get("x") < mostLeft:
-                mostLeft = node.get("x")
+            if node.get("width") and node.get("x"):
+                if mostRight == 0 or (node.get("x") + node.get("width")) > mostRight:
+                    mostRight = node.get("x")+node.get("width")
 
-            if mostRight == 0 or (node.get("x") + node.get("width")) > mostRight:
-                mostRight = node.get("x")+node.get("width")
+                if mostBottom == 0 or (node.get("y") + node.get("height")) > mostBottom:
+                    mostBottom = node.get("y")+node.get("height")
 
-            if mostTop == 0 or node.get("y") < mostTop:
-                mostTop = node.get("y")
+                if mostLeft == 0 or node.get("x") < mostLeft:
+                    mostLeft = node.get("x")
 
-            if mostBottom == 0 or (node.get("y") + node.get("height")) > mostBottom:
-                mostBottom = node.get("y")+node.get("height")
-
-                logging.debug(node.get("x"))
-                logging.debug(node.get("y"))
-                logging.debug(node.get("width"))
-                logging.debug(node.get("height"))
-
-                logging.debug(mostLeft)
-                logging.debug(mostRight)
-                logging.debug(mostTop)
-                logging.debug(mostBottom)
+                if mostTop == 0 or node.get("y") < mostTop:
+                    mostTop = node.get("y")
 
 
         # Save the data in a temporary file
@@ -501,16 +492,27 @@ License: {options.stencil_license_url}
 
             tfile = {
                     "name" : temporary_file.name,
-                    "left" : mostLeft,
-                    "top" : mostTop,
-                    "right" : mostRight,
-                    "bottom" : mostBottom
+                    "left" : self.makeFloat(mostLeft),
+                    "top" : self.makeFloat(mostTop),
+                    "right" : self.makeFloat(mostRight),
+                    "bottom" : self.makeFloat(mostBottom)
                     }
 
 
             logging.debug("    Creating temp file {}".format(temporary_file.name))
             doc.write(temporary_file.name)
             return tfile
+
+    def makeFloat(self, var):
+        if(type(var) is str):
+            arr = var.split(".")
+            if(len(arr) > 1):
+                var = float(arr[0] +"."+ arr[1])
+
+        return round(float(var),2)
+
+
+
 
     def get_simple_name(self, use_number_prefix, counter, layer_label):
         if use_number_prefix:
