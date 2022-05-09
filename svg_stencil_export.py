@@ -473,7 +473,7 @@ License: {options.stencil_license_url}
             logging.debug(node.get("id"))
             #Split the string with the espace character, thus getting an array of the actual SVG commands
 
-            if node.get("width") and node.get("x"):
+            if node.get("width"):
                 if mostRight == 0 or (node.get("x") + node.get("width")) > mostRight:
                     mostRight = node.get("x")+node.get("width")
 
@@ -504,6 +504,9 @@ License: {options.stencil_license_url}
             return tfile
 
     def makeFloat(self, var):
+        if var is None:
+            return 0
+
         if(type(var) is str):
             arr = var.split(".")
             if(len(arr) > 1):
