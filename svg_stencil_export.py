@@ -165,6 +165,7 @@ class BatchExporter(inkex.Effect):
         logging.debug(options)
 
         components_list = []
+        components_data = {}
 
         # Build the partial inkscape export command
         command = self.build_partial_command(options)
@@ -198,7 +199,6 @@ class BatchExporter(inkex.Effect):
             # Add to components for meta json
             components_list.append(file_name)
 
-
             # Check if the file exists. If not, export it.
             destination_path = os.path.join(options.output_path, file_name)
             if not options.overwrite_files and os.path.exists(destination_path):
@@ -209,22 +209,32 @@ class BatchExporter(inkex.Effect):
 
             # Create a new file in which we delete unwanted layers to keep the exported file size to a minimum
             logging.debug("  Preparing layer [{}]".format(layer_label))
-            temporary_file_path = self.manage_layers(layer_id, show_layer_ids, options.hierarchical_layers, options.using_clones)
+            temporary_file = self.manage_layers(layer_id, show_layer_ids, options.hierarchical_layers, options.using_clones)
+
+            components_data[file_name] = {
+                    "top": temporary_file['top'],
+                    "bottom": temporary_file['bottom'],
+                    "left": temporary_file['left'],
+                    "right": temporary_file['right']
+                    }
 
             # Export to file
             logging.debug("  Exporting [{}] as {}".format(layer_label, file_name))
-            self.export_to_file(command.copy(), temporary_file_path, destination_path, options.use_logging)
+            self.export_to_file(command.copy(), temporary_file["name"], destination_path, options.use_logging)
 
             # Clean up - delete the temporary file we have created
-            os.remove(temporary_file_path)
+            os.remove(temporary_file["name"])
 
             counter += 1
 
         # write_json's
-
         if options.write_components:
             destination_comp_json = os.path.join(options.output_path, "stencil-components.json")
-            stencil_comp_dict = { "components": components_list }
+            stencil_comp_dict = {
+                    "components": components_list,
+                    "hallo" : "jojo",
+                    "components_data" : components_data
+                    }
 
             with open(destination_comp_json, 'w') as json_file:
                 json.dump(stencil_comp_dict, json_file)
@@ -434,6 +444,8 @@ License: {options.stencil_license_url}
                 target_layer = layer
                 target_layer_found = True
 
+
+
             # Hide/Delete unwanted layers - hide for use_with_clones = TRUE
             if layer_id not in show_layer_ids:
                 if hide_layers:
@@ -453,11 +465,52 @@ License: {options.stencil_license_url}
             root.append(target_layer)
 
 
+        mostLeft = 0
+        mostRight = 0
+        mostTop = 0
+        mostBottom = 0
+        for node in target_layer.iterchildren():
+            logging.debug(node.get("id"))
+            #Split the string with the espace character, thus getting an array of the actual SVG commands
+
+            if mostLeft == 0 or node.get("x") < mostLeft:
+                mostLeft = node.get("x")
+
+            if mostRight == 0 or (node.get("x") + node.get("width")) > mostRight:
+                mostRight = node.get("x")+node.get("width")
+
+            if mostTop == 0 or node.get("y") < mostTop:
+                mostTop = node.get("y")
+
+            if mostBottom == 0 or (node.get("y") + node.get("height")) > mostBottom:
+                mostBottom = node.get("y")+node.get("height")
+
+                logging.debug(node.get("x"))
+                logging.debug(node.get("y"))
+                logging.debug(node.get("width"))
+                logging.debug(node.get("height"))
+
+                logging.debug(mostLeft)
+                logging.debug(mostRight)
+                logging.debug(mostTop)
+                logging.debug(mostBottom)
+
+
         # Save the data in a temporary file
         with tempfile.NamedTemporaryFile(delete=False) as temporary_file:
+
+            tfile = {
+                    "name" : temporary_file.name,
+                    "left" : mostLeft,
+                    "top" : mostTop,
+                    "right" : mostRight,
+                    "bottom" : mostBottom
+                    }
+
+
             logging.debug("    Creating temp file {}".format(temporary_file.name))
             doc.write(temporary_file.name)
-            return temporary_file.name
+            return tfile
 
     def get_simple_name(self, use_number_prefix, counter, layer_label):
         if use_number_prefix:
