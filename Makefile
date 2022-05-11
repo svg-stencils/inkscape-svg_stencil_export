@@ -7,3 +7,6 @@ copy2inkscape:
 
 zip:
 	zip -rj ./$(ZIPNAME) ./* -x ./$(ZIPNAME) -x ./*.png
+
+bump:
+	@echo "see README-release.md"

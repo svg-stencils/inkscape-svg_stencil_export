@@ -4,6 +4,7 @@
 
 - add Author
 - remove baseURL
+- add generator in meta
 
 ## v1.2 - May 9 2022
 - add geodata add export for canvasmode
