@@ -21,8 +21,8 @@ class Options():
         self.current_file = batch_exporter.options.input_file
 
         self.stencil_name = batch_exporter.options.stencil_name
-        self.base_url = batch_exporter.options.base_url
         self.stencil_homepage = batch_exporter.options.stencil_homepage
+        self.stencil_author = batch_exporter.options.stencil_author
         self.stencil_description = batch_exporter.options.stencil_description
         self.stencil_license_url = batch_exporter.options.stencil_license_url
 
@@ -75,7 +75,6 @@ class Options():
         print =  "===> EXTENSION PARAMETERS\n"
         print += "\n======> Controls page\n"
         print += "Stencil name: {}\n".format(self.stencil_name)
-        print += "Base url: {}\n".format(self.base_url)
         print += "Current file: {}\n".format(self.current_file)
         print += "Export type: {}\n".format(self.export_type)
         print += "Path: {}\n".format(self.output_path)
@@ -116,8 +115,8 @@ class BatchExporter(inkex.Effect):
 
         # Controls page
         self.arg_parser.add_argument("--stencil-name", action="store", type=str, dest="stencil_name", default="no-name", help="")
-        self.arg_parser.add_argument("--base-url", action="store", type=str, dest="base_url", default="", help="")
         self.arg_parser.add_argument("--stencil-homepage", action="store", type=str, dest="stencil_homepage", default="", help="")
+        self.arg_parser.add_argument("--stencil-author", action="store", type=str, dest="stencil_author", default="", help="")
         self.arg_parser.add_argument("--stencil-description", action="store", type=str, dest="stencil_description", default="", help="")
         self.arg_parser.add_argument("--stencil-license-url", action="store", type=str, dest="stencil_license_url", default="", help="")
 
@@ -248,9 +247,10 @@ class BatchExporter(inkex.Effect):
             destination_meta_json = os.path.join(options.output_path, "stencil-meta.json")
             stencil_meta_dict = {
                     "name": options.stencil_name,
-                    "base_url": options.base_url,
+                    "author": options.stencil_author,
                     "description": options.stencil_description,
                     "homepage": options.stencil_homepage,
+                    "generator": "SVG Stencil Export - Inkscape Extension - Version 1.3",
                     "license": options.stencil_license_url,
                     }
 
@@ -321,6 +321,8 @@ jobs:
 
 {options.stencil_description}
 
+Author: {options.stencil_author}
+
 License: {options.stencil_license_url}
 """
             destination_indexmd = os.path.join(options.output_path , "readme.md")
@@ -346,6 +348,7 @@ License: {options.stencil_license_url}
         <div class="container">
             <div class="row m-3">
                 <h1>{options.stencil_name}</h1>
+                <p>Author: {options.stencil_author}</p>
                 <p>{options.stencil_description}</p>
                 <p><a href="{options.stencil_license_url}">License</a></p>
             </div>

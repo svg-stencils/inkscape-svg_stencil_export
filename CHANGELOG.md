@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3 - May 11, 2022
+
+- add Author
+- remove baseURL
+
 ## v1.2 - May 9 2022
 - add geodata add export for canvasmode
 

@@ -35,14 +35,14 @@
       <label indent="1">Stencil name</label>
       <param name="stencil-name" type="string" gui-text="" indent="1">Unknown</param>
 
-      <label indent="1">BaseURL used to prefix the component files.</label>
-      <param name="base-url" type="string" gui-text="" indent="1" gui-hidden="true">https://mystencil.org</param>
-
       <label indent="1">Stencil Homepage</label>
       <param name="stencil-homepage" type="string" gui-text="" indent="1">https://mystencil.org</param>
 
+      <label indent="1">Author</label>
+      <param name="stencil-author" type="string" gui-text="" indent="1"></param>
+
       <label indent="1">Description</label>
-      <param name="stencil-description" appearance="multiline" type="string" gui-text="" indent="1">Stencils to be used for...</param>
+      <param name="stencil-description" appearance="multiline" type="string" gui-text="" indent="1">Stencils to be used for... Credits go to...</param>
 
       <label indent="1">License URL</label>
       <param name="stencil-license-url" type="string" gui-text="" indent="1">https://creativecommons.org/publicdomain/zero/1.0/</param>
@@ -63,51 +63,13 @@
       <param name="export-plain-svg" type="bool" gui-text="Export plain SVG" indent="1" gui-hidden="true">true</param>
       <param name="using-clones" type="bool" gui-text="Using clones" gui-description="It is recommended to unlink clones recursively(this will break clones) and leave this option unticked." indent="1" gui-hidden="true">false</param>
 
-      <!--
-      <param name="export-type" type="enum" gui-text="Export layers as:" indent="1">
-        <item value="svg">SVG</item>
-      </param>
-      -->
-
       <param name="export-type" type="string" gui-text="Export layers as:" indent="1" gui-hidden="true">SVG</param>
       <param name="export-pdf-version" type="string" gui-text="PDF version:" indent="1" gui-hidden="true">1.4</param>
       <param name="hierarchical-layers" type="string" gui-text="Layer export mode:" indent="1" gui-hidden="true">solo</param>
-      <!--
-      <param name="export-pdf-version" type="enum" gui-text="PDF version:" indent="1">
-        <item value="1.4">1.4</item>
-        <item value="1.5">1.5</item>
-        </param>
-      -->
-
-
-      <!--
-      <param name="hierarchical-layers" type="enum" gui-text="Layer export mode:" indent="1">
-        <item value="solo">Export each layer as a single layer</item>
-        <item value="hierarchical">Use parent layers as background layers</item>
-        </param>
-      -->
-
-
-
-      <!--
-      <param name="export-area-type" type="enum" gui-text="Choose export area type:" indent="1">
-        <item value="page">Page</item>
-        <item value="drawing">Drawing</item>
-        <item value="custom">Custom</item>
-        </param>
-      -->
 
       <param name="export-area-type" type="string" gui-text="" indent="1" gui-hidden="true">Drawing</param>
       <param name="export-area-size" type="string" gui-text="" indent="1" gui-hidden="true">0:0:100:100</param>
       <param name="export-res-type" type="string" gui-text="" indent="1" gui-hidden="true">Default</param>
-      <!--
-
-      <param name="export-res-type" type="enum" gui-text="Choose resolution type:" indent="1">
-        <item value="default">Default</item>
-        <item value="dpi">Custom DPI</item>
-        <item value="size">Custom size</item>
-        </param>
-      -->
 
       <param name="export-res-dpi" type="int" min="1" max="9999" gui-text="Custom DPI:" indent="1" gui-hidden="true">96</param>
       <param name="export-res-width" type="int" min="1" max="9999" gui-text="Width" indent="2" gui-hidden="true">100</param>
@@ -131,7 +93,7 @@
 
     <page name="about" gui-text="About">
       <label appearance="header">SVG Stencils</label>
-      <param name="help" type="description" indent="1">Version 1.2.</param>
+      <param name="help" id="extension_version" type="description" indent="1">Version 1.3.</param>
       <param name="help" type="description" indent="1">This extension is part of the SVG Stencils Project.</param>
       <param name="help" type="description" indent="1">https://svg-stencils.github.io</param>
 
