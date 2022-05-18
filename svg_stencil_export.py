@@ -367,7 +367,7 @@ License: {options.stencil_license_url}
   <body>
     <div class="container">
       <div class="row m-3">
-        <h1></h1>
+        <h1>{options.stencil_name}</h1>
         <p>
             Author: {options.stencil_author}<br/>
             <a href="{options.stencil_license_url}">License</a>
