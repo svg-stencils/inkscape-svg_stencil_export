@@ -316,10 +316,11 @@ jobs:
 
         if options.create_readme:
 
+            mddesc = options.stencil_description.replace("\\n","\n")
             indexmd = f"""
 # {options.stencil_name}
 
-{options.stencil_description}
+{mddesc}
 
 Author: {options.stencil_author}
 
@@ -334,30 +335,53 @@ License: {options.stencil_license_url}
 
         if options.create_cover_page:
 
+
+            htmldesc = options.stencil_description.replace("\\n","<br>")
+
+            htmljs = '''
+  <script>
+    switch(window.location.protocol) {
+          case 'http:':
+          case 'https:':
+            document.getElementById('helpText').innerHTML = '<p><a href="https://svg-stencils.github.io/?stencil='+window.location.href+'">preview this stencil in SVG Stencils</a></p><pre style="padding:20px;background-color:#eee; display: inline-block;">{\\n  "name": "'+document.title+'",\\n  "url": "'+window.location.href+'"\\n}</pre><p>Add this stencil to the <a href="https://github.com/svg-stencils/svg-stencils.github.io/edit/main/public/stencils.json">SVG Stencils Library</a> (Only send Pull requests when your Stencil is on a public webserver)</p>'
+            break;
+            case 'file:':
+            document.getElementById('helpText').innerHTML = 'If you run a local webserver you can preview this stencil in <a href="https://svg-stencils.github.io">SVG Stencils</a>. <br>E.g. <strong>cd my-stencil-dir; npm exec http.server -- --cors</strong>'
+            break;
+            default:
+            document.getElementById('helpText').innerHTML = ''
+            }
+  </script>
+            '''
+
+
             compstr=""
             for comp in components_list:
                 compstr=compstr+'<div class="col-sm"> <img style="max-width:200px;" class="img-thumbnail" src="'+comp+'" /></div>'
 
-            indexhtml = f"""
-<html>
-    <head>
-        <title>{options.stencil_name}</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    </head>
-    <body>
-        <div class="container">
-            <div class="row m-3">
-                <h1>{options.stencil_name}</h1>
-                <p>Author: {options.stencil_author}</p>
-                <p>{options.stencil_description}</p>
-                <p><a href="{options.stencil_license_url}">License</a></p>
-            </div>
-
-            <div class="row m-3">
-                {compstr}
-            </div>
-        </div>
-    </body>
+            indexhtml = f"""<html>
+  <head>
+    <title>{options.stencil_name}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row m-3">
+        <h1></h1>
+        <p>
+            Author: {options.stencil_author}<br/>
+            <a href="{options.stencil_license_url}">License</a>
+        </p>
+        <p>{htmldesc}</p>
+        <div id="helpText"></div>
+      </div>
+      <hr>
+      <div class="row m-3">
+          {compstr}
+      </div>
+    </div>
+    {htmljs}
+  </body>
 </html>
 """
             destination_indexhtml = os.path.join(options.output_path , "index.html")
@@ -528,7 +552,6 @@ License: {options.stencil_license_url}
         bbox_y = background_image.bounding_box().top
         bbox_width = background_image.bounding_box().width
         bbox_height = background_image.bounding_box().height
-
 
 
 
