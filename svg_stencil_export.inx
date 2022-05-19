@@ -60,26 +60,27 @@
 
     <page name="advanced" gui-text="Advanced">
 
-      <param name="export-plain-svg" type="bool" gui-text="Export plain SVG" indent="1" gui-hidden="true">true</param>
-      <param name="using-clones" type="bool" gui-text="Using clones" gui-description="It is recommended to unlink clones recursively(this will break clones) and leave this option unticked." indent="1" gui-hidden="true">false</param>
+      <!--<param name="export-plain-svg" type="bool" gui-text="Export plain SVG" indent="1" gui-hidden="true">true</param>-->
+      <!--<param name="using-clones" type="bool" gui-text="Using clones" gui-description="It is recommended to unlink clones recursively(this will break clones) and leave this option unticked." indent="1" gui-hidden="true">false</param>-->
 
-      <param name="export-type" type="string" gui-text="Export layers as:" indent="1" gui-hidden="true">SVG</param>
-      <param name="export-pdf-version" type="string" gui-text="PDF version:" indent="1" gui-hidden="true">1.4</param>
-      <param name="hierarchical-layers" type="string" gui-text="Layer export mode:" indent="1" gui-hidden="true">solo</param>
+      <!--<param name="export-type" type="string" gui-text="Export layers as:" indent="1" gui-hidden="true">SVG</param>-->
+      <!--<param name="export-pdf-version" type="string" gui-text="PDF version:" indent="1" gui-hidden="true">1.4</param>-->
+      <!--<param name="hierarchical-layers" type="string" gui-text="Layer export mode:" indent="1" gui-hidden="true">solo</param>-->
 
-      <param name="export-area-type" type="string" gui-text="" indent="1" gui-hidden="true">Drawing</param>
-      <param name="export-area-size" type="string" gui-text="" indent="1" gui-hidden="true">0:0:100:100</param>
-      <param name="export-res-type" type="string" gui-text="" indent="1" gui-hidden="true">Default</param>
+      <!--<param name="export-area-type" type="string" gui-text="" indent="1" gui-hidden="true">Drawing</param>-->
+      <!--<param name="export-area-size" type="string" gui-text="" indent="1" gui-hidden="true">0:0:100:100</param>-->
+      <!--<param name="export-res-type" type="string" gui-text="" indent="1" gui-hidden="true">Default</param>-->
 
+      <!--
       <param name="export-res-dpi" type="int" min="1" max="9999" gui-text="Custom DPI:" indent="1" gui-hidden="true">96</param>
       <param name="export-res-width" type="int" min="1" max="9999" gui-text="Width" indent="2" gui-hidden="true">100</param>
       <param name="export-res-height" type="int" min="1" max="9999" gui-text="Height" indent="2" gui-hidden="true">100</param>
-
+      -->
 
       <!-- OLD NAMING PARAMS -->
-      <param name="naming-scheme" type="string" gui-text="" indent="1" gui-hidden="true">Simple</param>
-      <param name="use-number-prefix" type="bool" gui-text="Add number as prefix" indent="1" gui-hidden="true">true</param>
-      <param name="name-template" type="string" gui-text="" gui-hidden="true" indent="1">[LAYER_NAME]</param>
+      <!--<param name="naming-scheme" type="string" gui-text="" indent="1" gui-hidden="true">Simple</param>-->
+      <!--<param name="use-number-prefix" type="bool" gui-text="Add number as prefix" indent="1" gui-hidden="true">true</param>-->
+      <!--<param name="name-template" type="string" gui-text="" gui-hidden="true" indent="1">[LAYER_NAME]</param>-->
 
       <label appearance="header">Logging</label>
       <param name="use-logging" type="bool" gui-text="Use logging" indent="1">false</param>
@@ -103,8 +104,6 @@
       <param name="help" type="description" indent="1">This extension is based on Batch Export. Thanks Stefan!</param>
       <param name="help" type="description" indent="1">https://github.com/StefanTraistaru/batch-export</param>
     </page>
-
-
 
   </param>
 
