@@ -108,7 +108,7 @@ class Options():
             return True
         return False
 
-class BatchExporter(inkex.Effect):
+class SVGStencilExporter(inkex.Effect):
     def __init__(self):
         """init the effetc library and get options from gui"""
         inkex.Effect.__init__(self)
@@ -250,7 +250,7 @@ class BatchExporter(inkex.Effect):
                     "author": options.stencil_author,
                     "description": options.stencil_description,
                     "homepage": options.stencil_homepage,
-                    "generator": "SVG Stencil Export - Inkscape Extension - Version 1.3",
+                    "generator": "SVG Stencil Export - Inkscape Extension - Version 1.4",
                     "license": options.stencil_license_url,
                     }
 
@@ -593,7 +593,7 @@ License: {options.stencil_license_url}
             exit()
 
 def _main():
-    exporter = BatchExporter()
+    exporter = SVGStencilExporter()
     exporter.run()
     exit()
 

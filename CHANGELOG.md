@@ -1,5 +1,15 @@
 # Changelog
 
+
+## v1.4 - May 19, 2022
+
+- right click to copy SVG file contents
+- enable zoombuttons
+- fix newlines in descriptions
+- add stencil-query parameter to preview unpublished stencils
+- backdrop while loading
+- new stencil: Material Icons
+
 ## v1.3 - May 11, 2022
 
 - add Author

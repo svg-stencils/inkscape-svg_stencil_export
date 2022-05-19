@@ -1,4 +1,4 @@
-VERSION = 1.3
+VERSION = 1.4
 BASENAME = inkscape-svg_stencil_export
 ZIPNAME = $(BASENAME)-$(VERSION).zip
 
