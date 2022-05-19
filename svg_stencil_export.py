@@ -13,10 +13,10 @@ import json
 class Options():
     def __init__(self, svg_stencil_exporter):
 
-        self.mostLeft = 0
-        self.mostRight = 0
-        self.mostTop = 0
-        self.mostBottom = 0
+        # self.mostLeft = 0
+        # self.mostRight = 0
+        # self.mostTop = 0
+        # self.mostBottom = 0
 
         self.current_file = svg_stencil_exporter.options.input_file
 
@@ -34,35 +34,27 @@ class Options():
         self.create_readme = self._str_to_bool(svg_stencil_exporter.options.create_readme)
 
         self.output_path = os.path.normpath(svg_stencil_exporter.options.path)
-        self.use_background_layers = self._str_to_bool(svg_stencil_exporter.options.use_background_layers)
         self.overwrite_files = self._str_to_bool(svg_stencil_exporter.options.overwrite_files)
 
         self.use_logging = self._str_to_bool(svg_stencil_exporter.options.use_logging)
         if self.use_logging:
-            #self.log_path = os.path.expanduser(svg_stencil_exporter.options.log_path)
             log_file_name = os.path.join(self.output_path, 'svg_stencil_export.log')
 
-            #self.overwrite_log = self._str_to_bool(svg_stencil_exporter.options.overwrite_log)
             if os.path.exists(log_file_name):
                 logging.basicConfig(filename=log_file_name, filemode="w", level=logging.DEBUG)
             else:
                 logging.basicConfig(filename=log_file_name, level=logging.DEBUG)
 
     def __str__(self):
-        print =  "===> EXTENSION PARAMETERS\n"
-        print += "\n======> Controls page\n"
-        print += "Stencil name: {}\n".format(self.stencil_name)
-        print += "Current file: {}\n".format(self.current_file)
-        print += "Path: {}\n".format(self.output_path)
-        print += "Use background layers: {}\n".format(self.use_background_layers)
-        #print += "Skip hidden layers: {}\n".format(self.skip_hidden_layers)
-        print += "Overwrite files: {}\n".format(self.overwrite_files)
-        print += "\n======> Help page\n"
-        print += "Use logging: {}\n".format(self.use_logging)
-        #print += "Overwrite log: {}\n".format(self.overwrite_log)
-        #print += "Log path: {}\n".format(self.log_path)
-        print += "---------------------------------------\n"
-        return print
+        toprint =  "EXTENSION PARAMETERS\n"
+        toprint += "---------------------------------------\n"
+        toprint += "Stencil name:     {}\n".format(self.stencil_name)
+        toprint += "Current file:     {}\n".format(self.current_file)
+        toprint += "Path:             {}\n".format(self.output_path)
+        toprint += "Overwrite files:  {}\n".format(self.overwrite_files)
+        toprint += "Use logging:      {}\n".format(self.use_logging)
+        toprint += "---------------------------------------\n"
+        return toprint
 
     def _str_to_bool(self, str):
         if str.lower() == 'true':
@@ -83,7 +75,7 @@ class SVGStencilExporter(inkex.Effect):
 
         # Controls page
         self.arg_parser.add_argument("--path", action="store", type=str, dest="path", default="", help="export path")
-        self.arg_parser.add_argument("--use-background-layers", action="store", type=str, dest="use_background_layers", default=False, help="")
+        #self.arg_parser.add_argument("--use-background-layers", action="store", type=str, dest="use_background_layers", default=False, help="")
         self.arg_parser.add_argument("--overwrite-files", action="store", type=str, dest="overwrite_files", default=False, help="")
         self.arg_parser.add_argument("--use-logging", action="store", type=str, dest="use_logging", default=False, help="")
 
@@ -99,12 +91,15 @@ class SVGStencilExporter(inkex.Effect):
         # This argument is not used in the script. It's purpose is to suppress an error when the script is called.
         self.arg_parser.add_argument("--tab", action="store", type=str, dest="tab", default="controls", help="")
 
-
     def effect(self):
-        counter = 1
 
         # Check user options
         options = Options(self)
+
+        # Create the output folder if it doesn't exist
+        if not os.path.exists(os.path.join(options.output_path)):
+            os.makedirs(os.path.join(options.output_path))
+
         logging.debug(options)
 
         components_list = []
@@ -114,56 +109,54 @@ class SVGStencilExporter(inkex.Effect):
         command = self.build_partial_command(options)
 
         # Get the layers from the current file
-        layers = self.get_layers(False, options.use_background_layers)
+        layers = self.get_layers()
 
+        counter = 0
         # For each layer export a file
         for (layer_id, layer_label, layer_type, parents) in layers:
-            if layer_type == "fixed":
-                continue
 
-            show_layer_ids = [layer[0] for layer in layers if layer[2] == "fixed" or layer[0] == layer_id]
-
-            # Create the output folder if it doesn't exist
-            if not os.path.exists(os.path.join(options.output_path)):
-                os.makedirs(os.path.join(options.output_path))
+            counter += 1
+            show_layer_ids = [layer[0] for layer in layers or layer[0] == layer_id]
 
             # Construct the name of the exported file
-            file_name = self.get_simple_name(True, counter, layer_label)
-            file_name = "{}.{}".format(file_name, "svg")
+            file_name = "{}_{}.{}".format(counter, layer_label, "svg")
             logging.debug("  File name: {}".format(file_name))
 
             # Add to components for meta json
             components_list.append(file_name)
 
-            # Check if the file exists. If not, export it.
-            destination_path = os.path.join(options.output_path, file_name)
-            if not options.overwrite_files and os.path.exists(destination_path):
-                logging.debug("  File already exists: {}\n".format(file_name))
-                # TODO: Should this be the expected functionality of this scenario?
-                counter += 1
-                continue
-
             # Create a new file in which we delete unwanted layers to keep the exported file size to a minimum
-            logging.debug("  Preparing layer [{}]".format(layer_label))
-            temporary_file = self.manage_layers(layer_id, show_layer_ids, False, False)
+            logging.debug("  Preparing layer target file [{}]".format(layer_label))
+            temporary_file = self.clean_up_target_file(layer_id, show_layer_ids)
 
             components_data[file_name] = {
+                    "type": layer_type,
                     "top": temporary_file['top'],
                     "bottom": temporary_file['bottom'],
                     "left": temporary_file['left'],
                     "right": temporary_file['right']
                     }
 
-            # Export to file
-            logging.debug("  Exporting [{}] as {}".format(layer_label, file_name))
-            self.export_to_file(command.copy(), temporary_file["name"], destination_path, options.use_logging)
+            # Check if the file exists. If not, export it.
+            destination_path = os.path.join(options.output_path, file_name)
+            if not options.overwrite_files and os.path.exists(destination_path):
+                logging.debug("  File already exists: {}\n".format(file_name))
 
-            # Clean up - delete the temporary file we have created
-            os.remove(temporary_file["name"])
+            else:
+                logging.debug("  Exporting [{}] as {}".format(layer_label, file_name))
+                self.export_to_file(command.copy(), temporary_file["name"], destination_path, options.use_logging)
 
-            counter += 1
+                # Clean up - delete the temporary file we have created
+                os.remove(temporary_file["name"])
 
-        # write_json's
+        self.writeComponentsJson(options, components_list, components_data)
+        self.writeMetaJson(options)
+        self.writeGitHubAction(options)
+        self.writeGitlabAction(options)
+        self.writeMarkdown(options)
+        self.writeHTML(options, components_list)
+
+    def writeComponentsJson(self, options, components_list, components_data):
         if options.write_components:
             destination_comp_json = os.path.join(options.output_path, "stencil-components.json")
             stencil_comp_dict = {
@@ -174,6 +167,8 @@ class SVGStencilExporter(inkex.Effect):
             with open(destination_comp_json, 'w') as json_file:
                 json.dump(stencil_comp_dict, json_file)
 
+
+    def writeMetaJson(self, options):
         if options.write_meta:
             destination_meta_json = os.path.join(options.output_path, "stencil-meta.json")
             stencil_meta_dict = {
@@ -189,6 +184,161 @@ class SVGStencilExporter(inkex.Effect):
                 json.dump(stencil_meta_dict, json_file)
 
 
+
+    def get_layers(self):
+        svg_layers = self.document.xpath('//svg:g[@inkscape:groupmode="layer"]', namespaces=inkex.NSS)
+        layers = []
+
+        for layer in svg_layers:
+
+            label_attrib_name = "{%s}label" % layer.nsmap['inkscape']
+            if label_attrib_name not in layer.attrib:
+                continue
+
+            # Skipping hidden layers
+            if 'style' in layer.attrib:
+                if 'display:none' in layer.attrib['style']:
+                    logging.debug("  Skip: [{}]".format(layer.attrib[label_attrib_name]))
+                    continue
+
+            # Get layer parents, if any
+            parents = []
+            parent  = layer.getparent()
+            while True:
+                if label_attrib_name not in parent.attrib:
+                    break
+                # Found a parent layer
+                # logging.debug("parent: {}".format(parent.attrib["id"]))
+                parents.append(parent.attrib["id"])
+                parent = parent.getparent()
+
+            #default layer_type
+            layer_type = "component"
+
+            # Locked layers get a locked layer_type
+            insensitive_name = "{%s}insensitive" % layer.nsmap['sodipodi']
+            if insensitive_name in layer.attrib:
+                if 'true' in layer.attrib[insensitive_name]:
+                    layer_type = "export_locked"
+
+            layer_id = layer.attrib["id"]
+            layer_label = layer.attrib[label_attrib_name]
+
+            logging.debug("  Use : [{}, {}]".format(layer_label, layer_type))
+            layers.append([layer_id, layer_label, layer_type, parents])
+
+        logging.debug("  TOTAL NUMBER OF LAYERS: {}\n".format(len(layers)))
+        return layers
+
+    def build_partial_command(self, options):
+        command = ['inkscape', '--vacuum-defs']
+        command.append('--export-plain-svg')
+        command.append('--export-type=svg')
+        command.append('--export-area-drawing')
+        #command.append('--export-area-page')
+        return command
+
+    # Delete unwanted layers to create a clean svg file that will be exported
+    def clean_up_target_file(self, target_layer_id, show_layer_ids):
+        # Create a copy of the current document
+        doc = copy.deepcopy(self.document)
+        target_layer_found = False
+        target_layer = None
+
+        # Iterate through all layers in the document
+        for layer in doc.xpath('//svg:g[@inkscape:groupmode="layer"]', namespaces=inkex.NSS):
+            layer_id = layer.attrib["id"]
+            layer_label = layer.attrib["{%s}label" % layer.nsmap['inkscape']]
+
+            # Store the target layer
+            if not target_layer_found and layer_id == target_layer_id:
+                target_layer = layer
+                target_layer_found = True
+
+            # Delete unwanted layers
+            if layer_id not in show_layer_ids:
+                layer.getparent().remove(layer)
+                logging.debug("    Deleting: [{}, {}]".format(layer_id, layer_label))
+
+        # Add the target layer as the single layer in the document
+        # This option is used, only when all the layers are deleted above
+        root = doc.getroot()
+        if target_layer == None:
+            logging.debug("    Error: Target layer not found [{}]".format(show_layer_ids[0]))
+
+        target_layer.attrib['style'] = 'display:inline'
+        root.append(target_layer)
+
+        for node in target_layer.iterchildren():
+            self.analyseNode(node)
+
+        # Save the data in a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.svg') as temporary_file:
+            tfile = {
+                    "name":   temporary_file.name,
+                    "left":   self.makeFloat(self.mostLeft),
+                    "top":    self.makeFloat(self.mostTop),
+                    "right":  self.makeFloat(self.mostRight),
+                    "bottom": self.makeFloat(self.mostBottom)
+                    }
+
+            logging.debug("    Creating temp file {}".format(temporary_file.name))
+            doc.write(temporary_file.name)
+            return tfile
+
+
+    # gather bounding box info to export
+    def analyseNode(self, node):
+        self.mostLeft = 0
+        self.mostRight = 0
+        self.mostTop = 0
+        self.mostBottom = 0
+
+        bbox = node.bounding_box()
+        if self.mostRight == 0 or (bbox.left + bbox.width) > self.mostRight:
+            self.mostRight = bbox.left + bbox.width
+
+        if self.mostBottom == 0 or (bbox.top + bbox.height) > self.mostBottom:
+            self.mostBottom = bbox.top + bbox.height
+
+        if self.mostLeft == 0 or bbox.left < self.mostLeft:
+            self.mostLeft = bbox.left
+
+        if self.mostTop == 0 or bbox.top < self.mostTop:
+            self.mostTop = bbox.top
+
+    def makeFloat(self, var):
+        if var is None:
+            return 0
+
+        if(type(var) is str):
+            arr = var.split(".")
+            if(len(arr) > 1):
+                var = float(arr[0] +"."+ arr[1])
+
+        return round(float(var),2)
+
+    def export_to_file(self, command, svg_path, output_path, use_logging):
+        command.append('--export-filename=%s' % output_path)
+        command.append(svg_path)
+        logging.debug("    {}\n".format(' '.join(command)))
+
+        try:
+            if use_logging:
+                # If not piped, stdout and stderr will be showed in an inkscape dialog at the end.
+                # Inkscape export will create A LOT of warnings, most of them repeated, and I believe
+                # it is pointless to crowd the log file with these warnings.
+                with subprocess.Popen(command) as proc:
+                    proc.wait(timeout=300)
+            else:
+                with subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) as proc:
+                    proc.wait(timeout=300)
+        except OSError:
+            logging.debug('Error while exporting file {}.'.format(command))
+            inkex.errormsg('Error while exporting file {}.'.format(command))
+            exit()
+
+    def writeGitHubAction(self, options):
         if options.create_github_action:
             ghdir = os.path.join(options.output_path, ".github", "workflows" )
             os.makedirs( ghdir, exist_ok=True )
@@ -225,6 +375,11 @@ jobs:
             ymlfile.write(gh_action_yaml)
             ymlfile.close()
 
+
+    ########################
+    ########################
+
+    def writeGitlabAction(self, options):
         if options.create_gitlab_action:
             gl_action_yaml = """pages:
   stage: deploy
@@ -245,8 +400,11 @@ jobs:
             ymlfile.write(gl_action_yaml)
             ymlfile.close()
 
-        if options.create_readme:
+    ########################
+    ########################
 
+    def writeMarkdown(self, options):
+        if options.create_readme:
             mddesc = options.stencil_description.replace("\\n","\n")
             indexmd = f"""
 # {options.stencil_name}
@@ -263,10 +421,11 @@ License: {options.stencil_license_url}
             mdfile.write(indexmd)
             mdfile.close()
 
+    ########################
+    ########################
 
+    def writeHTML(self, options, components_list):
         if options.create_cover_page:
-
-
             htmldesc = options.stencil_description.replace("\\n","<br>")
 
             htmljs = '''
@@ -283,8 +442,7 @@ License: {options.stencil_license_url}
             document.getElementById('helpText').innerHTML = ''
             }
   </script>
-            '''
-
+        '''
 
             compstr=""
             for comp in components_list:
@@ -320,191 +478,6 @@ License: {options.stencil_license_url}
             htmlfile = open(destination_indexhtml, 'w')
             htmlfile.write(indexhtml)
             htmlfile.close()
-
-
-    def get_layers(self, skip_hidden_layers, use_background_layers):
-        svg_layers = self.document.xpath('//svg:g[@inkscape:groupmode="layer"]', namespaces=inkex.NSS)
-        layers = []
-
-        for layer in svg_layers:
-            label_attrib_name = "{%s}label" % layer.nsmap['inkscape']
-            if label_attrib_name not in layer.attrib:
-                continue
-
-            # Get layer parents, if any
-            parents = []
-            parent  = layer.getparent()
-            while True:
-                if label_attrib_name not in parent.attrib:
-                    break
-                # Found a parent layer
-                # logging.debug("parent: {}".format(parent.attrib["id"]))
-                parents.append(parent.attrib["id"])
-                parent = parent.getparent()
-
-            # Skipping hidden layers
-            if skip_hidden_layers and 'style' in layer.attrib:
-                if 'display:none' in layer.attrib['style']:
-                    logging.debug("  Skip: [{}]".format(layer.attrib[label_attrib_name]))
-                    continue
-
-            layer_id = layer.attrib["id"]
-            layer_label = layer.attrib[label_attrib_name]
-
-            # Checking for background (fixed) layers
-            if use_background_layers and layer_label.lower().startswith("[fixed] "):
-                layer_type = "fixed"
-                layer_label = layer_label[8:]
-            else:
-                layer_type = "export"
-
-            logging.debug("  Use : [{}, {}]".format(layer_label, layer_type))
-            layers.append([layer_id, layer_label, layer_type, parents])
-
-        logging.debug("  TOTAL NUMBER OF LAYERS: {}\n".format(len(layers)))
-        logging.debug(layers)
-        return layers
-
-    def build_partial_command(self, options):
-        command = ['inkscape', '--vacuum-defs']
-        command.append('--export-plain-svg')
-        command.append('--export-type=svg')
-        command.append('--export-area-drawing')
-        #command.append('--export-area-page')
-        return command
-
-    # Delete/Hide unwanted layers to create a clean svg file that will be exported
-    def manage_layers(self, target_layer_id, show_layer_ids, hierarchical_layers, hide_layers):
-        # Create a copy of the current document
-        doc = copy.deepcopy(self.document)
-        target_layer_found = False
-        target_layer = None
-
-        # Iterate through all layers in the document
-        for layer in doc.xpath('//svg:g[@inkscape:groupmode="layer"]', namespaces=inkex.NSS):
-            layer_id = layer.attrib["id"]
-            layer_label = layer.attrib["{%s}label" % layer.nsmap['inkscape']]
-
-            # Store the target layer
-            if not target_layer_found and layer_id == target_layer_id:
-                target_layer = layer
-                target_layer_found = True
-
-
-
-            # Hide/Delete unwanted layers - hide for use_with_clones = TRUE
-            if layer_id not in show_layer_ids:
-                if hide_layers:
-                    layer.attrib['style'] = 'display:none'
-                    logging.debug("    Hiding: [{}, {}]".format(layer_id, layer_label))
-                else:
-                    layer.getparent().remove(layer)
-                    logging.debug("    Deleting: [{}, {}]".format(layer_id, layer_label))
-
-        # Add the target layer as the single layer in the document
-        # This option is used, only when all the layers are deleted above
-        if not hierarchical_layers:
-            root = doc.getroot()
-            if target_layer == None:
-                logging.debug("    Error: Target layer not found [{}]".format(show_layer_ids[0]))
-            target_layer.attrib['style'] = 'display:inline'
-            root.append(target_layer)
-
-        self.mostLeft = 0
-        self.mostRight = 0
-        self.mostTop = 0
-        self.mostBottom = 0
-
-        for node in target_layer.iterchildren():
-            self.analyseNode(node)
-
-        # Save the data in a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.svg') as temporary_file:
-
-            tfile = {
-                    "name" : temporary_file.name,
-                    "left" : self.makeFloat(self.mostLeft),
-                    "top" : self.makeFloat(self.mostTop),
-                    "right" : self.makeFloat(self.mostRight),
-                    "bottom" : self.makeFloat(self.mostBottom)
-                    }
-
-
-            logging.debug("    Creating temp file {}".format(temporary_file.name))
-            doc.write(temporary_file.name)
-            return tfile
-
-
-    def analyseNode(self, node):
-
-        bbox = node.bounding_box()
-        if self.mostRight == 0 or (bbox.left + bbox.width) > self.mostRight:
-            self.mostRight = bbox.left + bbox.width
-
-        if self.mostBottom == 0 or (bbox.top + bbox.height) > self.mostBottom:
-            self.mostBottom = bbox.top + bbox.height
-
-        if self.mostLeft == 0 or bbox.left < self.mostLeft:
-            self.mostLeft = bbox.left
-
-        if self.mostTop == 0 or bbox.top < self.mostTop:
-            self.mostTop = bbox.top
-
-    def makeFloat(self, var):
-        if var is None:
-            return 0
-
-        if(type(var) is str):
-            arr = var.split(".")
-            if(len(arr) > 1):
-                var = float(arr[0] +"."+ arr[1])
-
-        return round(float(var),2)
-
-    def imageDim(self, background_image):
-        bbox_x = background_image.bounding_box().left
-        bbox_y = background_image.bounding_box().top
-        bbox_width = background_image.bounding_box().width
-        bbox_height = background_image.bounding_box().height
-
-
-
-    def get_simple_name(self, use_number_prefix, counter, layer_label):
-        if use_number_prefix:
-            return "{}_{}".format(counter, layer_label)
-
-        return layer_label
-
-    def get_advanced_name(self, template_name, counter, layer_label):
-        file_name = template_name
-        file_name = file_name.replace('[LAYER_NAME]', layer_label)
-        file_name = file_name.replace("[NUM]", str(counter))
-        file_name = file_name.replace("[NUM-1]", str(counter).zfill(1))
-        file_name = file_name.replace("[NUM-2]", str(counter).zfill(2))
-        file_name = file_name.replace("[NUM-3]", str(counter).zfill(3))
-        file_name = file_name.replace("[NUM-4]", str(counter).zfill(4))
-        file_name = file_name.replace("[NUM-5]", str(counter).zfill(5))
-        return file_name
-
-    def export_to_file(self, command, svg_path, output_path, use_logging):
-        command.append('--export-filename=%s' % output_path)
-        command.append(svg_path)
-        logging.debug("{}\n".format(command))
-
-        try:
-            if use_logging:
-                # If not piped, stdout and stderr will be showed in an inkscape dialog at the end.
-                # Inkscape export will create A LOT of warnings, most of them repeated, and I believe
-                # it is pointless to crowd the log file with these warnings.
-                with subprocess.Popen(command) as proc:
-                    proc.wait(timeout=300)
-            else:
-                with subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) as proc:
-                    proc.wait(timeout=300)
-        except OSError:
-            logging.debug('Error while exporting file {}.'.format(command))
-            inkex.errormsg('Error while exporting file {}.'.format(command))
-            exit()
 
 def _main():
     exporter = SVGStencilExporter()

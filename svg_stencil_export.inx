@@ -20,7 +20,7 @@
       <separator/>
       <spacer/>
 
-      <param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>
+      <!--<param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>-->
       <!--<param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>-->
       <param name="overwrite-files" type="bool" gui-text="Overwrite existing component files" indent="1">true</param>
 
