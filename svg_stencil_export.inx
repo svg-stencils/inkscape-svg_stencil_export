@@ -21,8 +21,12 @@
       <spacer/>
 
       <param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>
-      <param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>
+      <!--<param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>-->
       <param name="overwrite-files" type="bool" gui-text="Overwrite existing component files" indent="1">true</param>
+
+      <separator/>
+      <spacer/>
+      <param name="use-logging" type="bool" gui-text="Write log file" indent="1">false</param>
 
     </page>
 
@@ -49,13 +53,14 @@
       <param name="create-gitlab-action" type="bool" gui-text="Create GitLab Pages CI file" indent="1">false</param>
     </page>
 
-    <page name="advanced" gui-text="Advanced">
-      <label appearance="header">Logging</label>
-      <param name="use-logging" type="bool" gui-text="Use logging" indent="1">false</param>
+    <!--
+    <page name="advanced" gui-text="Logging">
       <param name="overwrite-log" type="bool" gui-text="Overwrite existing log file" indent="1">false</param>
       <label indent="1">Log file path:</label>
       <param name="log-path" type="path" mode="folder" gui-text=" " indent="1"/>
-    </page>
+      </page>
+        -->
+
 
     <page name="about" gui-text="About">
       <label appearance="header">SVG Stencils</label>

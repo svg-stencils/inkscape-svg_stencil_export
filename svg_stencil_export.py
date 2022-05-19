@@ -11,39 +11,39 @@ import logging
 import json
 
 class Options():
-    def __init__(self, batch_exporter):
+    def __init__(self, svg_stencil_exporter):
 
         self.mostLeft = 0
         self.mostRight = 0
         self.mostTop = 0
         self.mostBottom = 0
 
-        self.current_file = batch_exporter.options.input_file
+        self.current_file = svg_stencil_exporter.options.input_file
 
-        self.stencil_name = batch_exporter.options.stencil_name
-        self.stencil_homepage = batch_exporter.options.stencil_homepage
-        self.stencil_author = batch_exporter.options.stencil_author
-        self.stencil_description = batch_exporter.options.stencil_description
-        self.stencil_license_url = batch_exporter.options.stencil_license_url
+        self.stencil_name = svg_stencil_exporter.options.stencil_name
+        self.stencil_homepage = svg_stencil_exporter.options.stencil_homepage
+        self.stencil_author = svg_stencil_exporter.options.stencil_author
+        self.stencil_description = svg_stencil_exporter.options.stencil_description
+        self.stencil_license_url = svg_stencil_exporter.options.stencil_license_url
 
-        self.create_github_action = self._str_to_bool(batch_exporter.options.create_github_action)
-        self.create_gitlab_action = self._str_to_bool(batch_exporter.options.create_gitlab_action)
-        self.write_meta = self._str_to_bool(batch_exporter.options.write_meta)
-        self.write_components = self._str_to_bool(batch_exporter.options.write_components)
-        self.create_cover_page = self._str_to_bool(batch_exporter.options.create_cover_page)
-        self.create_readme = self._str_to_bool(batch_exporter.options.create_readme)
+        self.create_github_action = self._str_to_bool(svg_stencil_exporter.options.create_github_action)
+        self.create_gitlab_action = self._str_to_bool(svg_stencil_exporter.options.create_gitlab_action)
+        self.write_meta = self._str_to_bool(svg_stencil_exporter.options.write_meta)
+        self.write_components = self._str_to_bool(svg_stencil_exporter.options.write_components)
+        self.create_cover_page = self._str_to_bool(svg_stencil_exporter.options.create_cover_page)
+        self.create_readme = self._str_to_bool(svg_stencil_exporter.options.create_readme)
 
-        self.output_path = os.path.normpath(batch_exporter.options.path)
-        self.use_background_layers = self._str_to_bool(batch_exporter.options.use_background_layers)
-        self.skip_hidden_layers = self._str_to_bool(batch_exporter.options.skip_hidden_layers)
-        self.overwrite_files = self._str_to_bool(batch_exporter.options.overwrite_files)
+        self.output_path = os.path.normpath(svg_stencil_exporter.options.path)
+        self.use_background_layers = self._str_to_bool(svg_stencil_exporter.options.use_background_layers)
+        self.overwrite_files = self._str_to_bool(svg_stencil_exporter.options.overwrite_files)
 
-        self.use_logging = self._str_to_bool(batch_exporter.options.use_logging)
+        self.use_logging = self._str_to_bool(svg_stencil_exporter.options.use_logging)
         if self.use_logging:
-            self.log_path = os.path.expanduser(batch_exporter.options.log_path)
-            self.overwrite_log = self._str_to_bool(batch_exporter.options.overwrite_log)
-            log_file_name = os.path.join(self.log_path, 'batch_export.log')
-            if self.overwrite_log and os.path.exists(log_file_name):
+            #self.log_path = os.path.expanduser(svg_stencil_exporter.options.log_path)
+            log_file_name = os.path.join(self.output_path, 'svg_stencil_export.log')
+
+            #self.overwrite_log = self._str_to_bool(svg_stencil_exporter.options.overwrite_log)
+            if os.path.exists(log_file_name):
                 logging.basicConfig(filename=log_file_name, filemode="w", level=logging.DEBUG)
             else:
                 logging.basicConfig(filename=log_file_name, level=logging.DEBUG)
@@ -55,12 +55,12 @@ class Options():
         print += "Current file: {}\n".format(self.current_file)
         print += "Path: {}\n".format(self.output_path)
         print += "Use background layers: {}\n".format(self.use_background_layers)
-        print += "Skip hidden layers: {}\n".format(self.skip_hidden_layers)
+        #print += "Skip hidden layers: {}\n".format(self.skip_hidden_layers)
         print += "Overwrite files: {}\n".format(self.overwrite_files)
         print += "\n======> Help page\n"
         print += "Use logging: {}\n".format(self.use_logging)
-        print += "Overwrite log: {}\n".format(self.overwrite_log)
-        print += "Log path: {}\n".format(self.log_path)
+        #print += "Overwrite log: {}\n".format(self.overwrite_log)
+        #print += "Log path: {}\n".format(self.log_path)
         print += "---------------------------------------\n"
         return print
 
@@ -82,9 +82,10 @@ class SVGStencilExporter(inkex.Effect):
         self.arg_parser.add_argument("--stencil-license-url", action="store", type=str, dest="stencil_license_url", default="", help="")
 
         # Controls page
-        #self.arg_parser.add_argument("--export-type", action="store", type=str, dest="export_type", default="svg", help="")
         self.arg_parser.add_argument("--path", action="store", type=str, dest="path", default="", help="export path")
         self.arg_parser.add_argument("--use-background-layers", action="store", type=str, dest="use_background_layers", default=False, help="")
+        self.arg_parser.add_argument("--overwrite-files", action="store", type=str, dest="overwrite_files", default=False, help="")
+        self.arg_parser.add_argument("--use-logging", action="store", type=str, dest="use_logging", default=False, help="")
 
         self.arg_parser.add_argument("--write-meta", action="store", type=str, dest="write_meta", default=False, help="")
         self.arg_parser.add_argument("--write-components", action="store", type=str, dest="write_components", default=False, help="")
@@ -93,13 +94,6 @@ class SVGStencilExporter(inkex.Effect):
         self.arg_parser.add_argument("--create-cover-page", action="store", type=str, dest="create_cover_page", default=False, help="")
         self.arg_parser.add_argument("--create-readme", action="store", type=str, dest="create_readme", default=False, help="")
 
-        self.arg_parser.add_argument("--skip-hidden-layers", action="store", type=str, dest="skip_hidden_layers", default=False, help="")
-        self.arg_parser.add_argument("--overwrite-files", action="store", type=str, dest="overwrite_files", default=False, help="")
-
-        # Help page
-        self.arg_parser.add_argument("--use-logging", action="store", type=str, dest="use_logging", default=False, help="")
-        self.arg_parser.add_argument("--overwrite-log", action="store", type=str, dest="overwrite_log", default=False, help="")
-        self.arg_parser.add_argument("--log-path", action="store", type=str, dest="log_path", default="", help="")
 
         # HACK - the script is called with a "--tab controls" option as an argument from the notebook param in the inx file.
         # This argument is not used in the script. It's purpose is to suppress an error when the script is called.
@@ -120,7 +114,7 @@ class SVGStencilExporter(inkex.Effect):
         command = self.build_partial_command(options)
 
         # Get the layers from the current file
-        layers = self.get_layers(options.skip_hidden_layers, options.use_background_layers)
+        layers = self.get_layers(False, options.use_background_layers)
 
         # For each layer export a file
         for (layer_id, layer_label, layer_type, parents) in layers:
@@ -128,20 +122,13 @@ class SVGStencilExporter(inkex.Effect):
                 continue
 
             show_layer_ids = [layer[0] for layer in layers if layer[2] == "fixed" or layer[0] == layer_id]
-            # Append parent layers
-            #if options.hierarchical_layers:
-            #    show_layer_ids.extend(parents)
-            #    logging.debug(show_layer_ids)
 
             # Create the output folder if it doesn't exist
             if not os.path.exists(os.path.join(options.output_path)):
                 os.makedirs(os.path.join(options.output_path))
 
             # Construct the name of the exported file
-            #if options.naming_scheme == 'simple':
             file_name = self.get_simple_name(True, counter, layer_label)
-            #else:
-            #    file_name = self.get_advanced_name(options.name_template, counter, layer_label)
             file_name = "{}.{}".format(file_name, "svg")
             logging.debug("  File name: {}".format(file_name))
 
@@ -380,27 +367,10 @@ License: {options.stencil_license_url}
 
     def build_partial_command(self, options):
         command = ['inkscape', '--vacuum-defs']
-
-        #if options.export_type == 'svg' and options.export_plain_svg == True:
         command.append('--export-plain-svg')
-        #if options.export_type == 'pdf':
-        #    command.append('--export-pdf-version={}'.format(options.export_pdf_version))
-
-        # Export area - default: export area page
-        #if options.export_area_type == 'drawing':
+        command.append('--export-type=svg')
         command.append('--export-area-drawing')
-        #elif options.export_area_type == 'custom':
-        #    command.append('--export-area={}'.format(options.export_area_size))
-        #else:
-        #    command.append('--export-area-page')
-
-        # Export res - default: no arguments
-        #if options.export_res_type == 'dpi':
-        #    command.append('--export-dpi={}'.format(options.export_res_dpi))
-        #elif options.export_res_type == 'size':
-        #    command.append('--export-width={}'.format(options.export_res_width))
-        #    command.append('--export-height={}'.format(options.export_res_height))
-
+        #command.append('--export-area-page')
         return command
 
     # Delete/Hide unwanted layers to create a clean svg file that will be exported
@@ -449,7 +419,7 @@ License: {options.stencil_license_url}
             self.analyseNode(node)
 
         # Save the data in a temporary file
-        with tempfile.NamedTemporaryFile(delete=False) as temporary_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.svg') as temporary_file:
 
             tfile = {
                     "name" : temporary_file.name,
