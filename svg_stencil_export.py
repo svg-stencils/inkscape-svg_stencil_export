@@ -33,33 +33,11 @@ class Options():
         self.create_cover_page = self._str_to_bool(batch_exporter.options.create_cover_page)
         self.create_readme = self._str_to_bool(batch_exporter.options.create_readme)
 
-        #self.export_type = batch_exporter.options.export_type
         self.output_path = os.path.normpath(batch_exporter.options.path)
         self.use_background_layers = self._str_to_bool(batch_exporter.options.use_background_layers)
         self.skip_hidden_layers = self._str_to_bool(batch_exporter.options.skip_hidden_layers)
         self.overwrite_files = self._str_to_bool(batch_exporter.options.overwrite_files)
-        #self.export_plain_svg = self._str_to_bool(batch_exporter.options.export_plain_svg)
-        #self.using_clones = self._str_to_bool(batch_exporter.options.using_clones)
-        #hierarchical_layers = batch_exporter.options.hierarchical_layers
-        #self.hierarchical_layers = False
-        #if hierarchical_layers == "hierarchical":
-        #    self.hierarchical_layers = True
-        #self.export_pdf_version = batch_exporter.options.export_pdf_version
 
-        # Export size page
-        #self.export_area_type = batch_exporter.options.export_area_type
-        #self.export_area_size = batch_exporter.options.export_area_size
-        #self.export_res_type = batch_exporter.options.export_res_type
-        #self.export_res_dpi = batch_exporter.options.export_res_dpi
-        #self.export_res_width = batch_exporter.options.export_res_width
-        #self.export_res_height = batch_exporter.options.export_res_height
-
-        # File naming page
-        #self.naming_scheme = batch_exporter.options.naming_scheme
-        #self.use_number_prefix = self._str_to_bool(batch_exporter.options.use_number_prefix)
-        #self.name_template = batch_exporter.options.name_template
-
-        # Help page
         self.use_logging = self._str_to_bool(batch_exporter.options.use_logging)
         if self.use_logging:
             self.log_path = os.path.expanduser(batch_exporter.options.log_path)
@@ -75,26 +53,10 @@ class Options():
         print += "\n======> Controls page\n"
         print += "Stencil name: {}\n".format(self.stencil_name)
         print += "Current file: {}\n".format(self.current_file)
-        #print += "Export type: {}\n".format(self.export_type)
         print += "Path: {}\n".format(self.output_path)
         print += "Use background layers: {}\n".format(self.use_background_layers)
         print += "Skip hidden layers: {}\n".format(self.skip_hidden_layers)
         print += "Overwrite files: {}\n".format(self.overwrite_files)
-        #print += "Export plain SVG: {}\n".format(self.export_plain_svg)
-        #print += "Using clones: {}\n".format(self.using_clones)
-        #print += "Hierarchical layers: {}\n".format(self.hierarchical_layers)
-        #print += "Export PDF version: {}\n".format(self.export_pdf_version)
-        #print += "\n======> Export size page\n"
-        #print += "Export area type: {}\n".format(self.export_area_type)
-        #print += "Export area size: {}\n".format(self.export_area_size)
-        #print += "Export res type: {}\n".format(self.export_res_type)
-        #print += "Export res DPI: {}\n".format(self.export_res_dpi)
-        #print += "Export res width: {}\n".format(self.export_res_width)
-        #print += "Export res height: {}\n".format(self.export_res_height)
-        #print += "\n======> File naming page\n"
-        #print += "Naming scheme: {}\n".format(self.naming_scheme)
-        #print += "Add number as prefix: {}\n".format(self.use_number_prefix)
-        #print += "Name template: {}\n".format(self.name_template)
         print += "\n======> Help page\n"
         print += "Use logging: {}\n".format(self.use_logging)
         print += "Overwrite log: {}\n".format(self.overwrite_log)
@@ -133,23 +95,6 @@ class SVGStencilExporter(inkex.Effect):
 
         self.arg_parser.add_argument("--skip-hidden-layers", action="store", type=str, dest="skip_hidden_layers", default=False, help="")
         self.arg_parser.add_argument("--overwrite-files", action="store", type=str, dest="overwrite_files", default=False, help="")
-        #self.arg_parser.add_argument("--export-plain-svg", action="store", type=str, dest="export_plain_svg", default=False, help="")
-        #self.arg_parser.add_argument("--using-clones", action="store", type=str, dest="using_clones", default=False, help="")
-        #self.arg_parser.add_argument("--hierarchical-layers", action="store", type=str, dest="hierarchical_layers", default="solo", help="Is this working?")
-        #self.arg_parser.add_argument("--export-pdf-version", action="store", type=str, dest="export_pdf_version", default="1.5", help="")
-
-        # Export size page
-        #self.arg_parser.add_argument("--export-area-type", action="store", type=str, dest="export_area_type", default="page", help="")
-        #self.arg_parser.add_argument("--export-area-size", action="store", type=str, dest="export_area_size", default="0:0:100:100", help="")
-        #self.arg_parser.add_argument("--export-res-type", action="store", type=str, dest="export_res_type", default="default", help="")
-        #self.arg_parser.add_argument("--export-res-dpi", action="store", type=int, dest="export_res_dpi", default="96", help="")
-        #self.arg_parser.add_argument("--export-res-width", action="store", type=int, dest="export_res_width", default="100", help="")
-        #self.arg_parser.add_argument("--export-res-height", action="store", type=int, dest="export_res_height", default="100", help="")
-
-        # File naming page
-        #self.arg_parser.add_argument("--naming-scheme", action="store", type=str, dest="naming_scheme", default="simple", help="")
-        #self.arg_parser.add_argument("--use-number-prefix", action="store", type=str, dest="use_number_prefix", default=False, help="")
-        #self.arg_parser.add_argument("--name-template", action="store", type=str, dest="name_template", default="[LAYER_NAME]", help="")
 
         # Help page
         self.arg_parser.add_argument("--use-logging", action="store", type=str, dest="use_logging", default=False, help="")
