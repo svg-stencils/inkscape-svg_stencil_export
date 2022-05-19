@@ -127,6 +127,8 @@ class SVGStencilExporter(inkex.Effect):
 
             # Create a new file in which we delete unwanted layers to keep the exported file size to a minimum
             logging.debug("  Preparing layer target file [{}]".format(layer_label))
+            logging.debug(show_layer_ids)
+            logging.debug(layer_id)
             temporary_file = self.clean_up_target_file(layer_id, show_layer_ids)
 
             components_data[file_name] = {
@@ -235,7 +237,6 @@ class SVGStencilExporter(inkex.Effect):
         command.append('--export-plain-svg')
         command.append('--export-type=svg')
         command.append('--export-area-drawing')
-        #command.append('--export-area-page')
         return command
 
     # Delete unwanted layers to create a clean svg file that will be exported
@@ -255,10 +256,9 @@ class SVGStencilExporter(inkex.Effect):
                 target_layer = layer
                 target_layer_found = True
 
-            # Delete unwanted layers
-            if layer_id not in show_layer_ids:
-                layer.getparent().remove(layer)
-                logging.debug("    Deleting: [{}, {}]".format(layer_id, layer_label))
+            # Delete all layers
+            layer.getparent().remove(layer)
+            logging.debug("    Deleting: [{}, {}]".format(layer_id, layer_label))
 
         # Add the target layer as the single layer in the document
         # This option is used, only when all the layers are deleted above
