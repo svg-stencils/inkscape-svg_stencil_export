@@ -2,7 +2,7 @@
 
 ![](https://svg-stencils.github.io/logo.png)
 
-This extension help creating new stencils for [svg-stencils.github.io](https://svg-stencils.github.io/).
+This extension helps creating new stencils for [svg-stencils.github.io](https://svg-stencils.github.io/).
 
 ## Features
 
