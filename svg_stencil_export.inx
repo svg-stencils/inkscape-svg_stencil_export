@@ -20,8 +20,6 @@
       <separator/>
       <spacer/>
 
-      <!--<param name="use-background-layers" type="bool" gui-text="Use background layers" indent="1">false</param>-->
-      <!--<param name="skip-hidden-layers" type="bool" gui-text="Skip hidden layers" indent="1">true</param>-->
       <param name="overwrite-files" type="bool" gui-text="Overwrite existing component files" indent="1">true</param>
 
       <separator/>
@@ -52,15 +50,6 @@
       <param name="create-github-action" type="bool" gui-text="Create GitHub Pages Action Workflow" indent="1">false</param>
       <param name="create-gitlab-action" type="bool" gui-text="Create GitLab Pages CI file" indent="1">false</param>
     </page>
-
-    <!--
-    <page name="advanced" gui-text="Logging">
-      <param name="overwrite-log" type="bool" gui-text="Overwrite existing log file" indent="1">false</param>
-      <label indent="1">Log file path:</label>
-      <param name="log-path" type="path" mode="folder" gui-text=" " indent="1"/>
-      </page>
-        -->
-
 
     <page name="about" gui-text="About">
       <label appearance="header">SVG Stencils</label>
