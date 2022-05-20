@@ -2,6 +2,7 @@
 
 import sys
 import inkex
+from lxml import etree
 import os
 import subprocess
 import tempfile
@@ -114,7 +115,6 @@ class SVGStencilExporter(inkex.Effect):
         counter = 0
         # For each layer export a file
         for (layer_id, layer_label, layer_type, parents) in layers:
-
             counter += 1
             show_layer_ids = [layer[0] for layer in layers or layer[0] == layer_id]
 
@@ -122,15 +122,16 @@ class SVGStencilExporter(inkex.Effect):
             file_name = "{}_{}.{}".format(counter, layer_label, "svg")
             logging.debug("  File name: {}".format(file_name))
 
-            # Add to components for meta json
-            components_list.append(file_name)
 
             # Create a new file in which we delete unwanted layers to keep the exported file size to a minimum
             logging.debug("  Preparing layer target file [{}]".format(layer_label))
-            logging.debug(show_layer_ids)
-            logging.debug(layer_id)
             temporary_file = self.clean_up_target_file(layer_id, show_layer_ids)
+            if not temporary_file:
+                continue
 
+            # Add to components for json
+            components_list.append(file_name)
+            # Add to extra componentData for json
             components_data[file_name] = {
                     "type": layer_type,
                     "top": temporary_file['top'],
@@ -157,6 +158,9 @@ class SVGStencilExporter(inkex.Effect):
         self.writeGitlabAction(options)
         self.writeMarkdown(options)
         self.writeHTML(options, components_list)
+
+        logging.debug("===============================\n\nSTENCIL EXPORT FINSISHED:\n")
+
 
     def writeComponentsJson(self, options, components_list, components_data):
         if options.write_components:
@@ -188,6 +192,7 @@ class SVGStencilExporter(inkex.Effect):
 
 
     def get_layers(self):
+
         svg_layers = self.document.xpath('//svg:g[@inkscape:groupmode="layer"]', namespaces=inkex.NSS)
         layers = []
 
@@ -221,7 +226,8 @@ class SVGStencilExporter(inkex.Effect):
             insensitive_name = "{%s}insensitive" % layer.nsmap['sodipodi']
             if insensitive_name in layer.attrib:
                 if 'true' in layer.attrib[insensitive_name]:
-                    layer_type = "export_locked"
+                    layer_type = "locked"
+                    self.draw_start_rect(layer)
 
             layer_id = layer.attrib["id"]
             layer_label = layer.attrib[label_attrib_name]
@@ -231,6 +237,26 @@ class SVGStencilExporter(inkex.Effect):
 
         logging.debug("  TOTAL NUMBER OF LAYERS: {}\n".format(len(layers)))
         return layers
+
+    def draw_start_rect(self, parent):
+        x1 = 1
+        y1 = 2
+        x2 = 1
+        y2 = 2
+
+        line_style   = { 'stroke': '#000000',
+                         'stroke-width': str(1),
+                         'fill': 'none'
+                       }
+
+        line_attribs = {'style' : str(inkex.Style(line_style)),
+                        inkex.addNS('label','inkscape') : "none",
+
+                        'd' : 'M '+str(x1) +',' +
+                        str(y1) +' L '+str(x2)
+                        +','+str(y2) }
+
+        line = etree.SubElement(parent, inkex.addNS('path','svg'), line_attribs )
 
     def build_partial_command(self, options):
         command = ['inkscape', '--vacuum-defs']
@@ -258,7 +284,7 @@ class SVGStencilExporter(inkex.Effect):
 
             # Delete all layers
             layer.getparent().remove(layer)
-            logging.debug("    Deleting: [{}, {}]".format(layer_id, layer_label))
+            #logging.debug("    Deleting: [{}, {}]".format(layer_id, layer_label))
 
         # Add the target layer as the single layer in the document
         # This option is used, only when all the layers are deleted above
@@ -269,8 +295,20 @@ class SVGStencilExporter(inkex.Effect):
         target_layer.attrib['style'] = 'display:inline'
         root.append(target_layer)
 
+        self.mostLeft = 0
+        self.mostRight = 0
+        self.mostTop = 0
+        self.mostBottom = 0
+
+        countChildren = 0
         for node in target_layer.iterchildren():
-            self.analyseNode(node)
+            countChildren += 1
+
+        if countChildren == 0:
+            return False
+
+        for node in target_layer.iterchildren():
+            self.analyseNode(node, countChildren)
 
         # Save the data in a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.svg') as temporary_file:
@@ -286,26 +324,66 @@ class SVGStencilExporter(inkex.Effect):
             doc.write(temporary_file.name)
             return tfile
 
-
     # gather bounding box info to export
-    def analyseNode(self, node):
-        self.mostLeft = 0
-        self.mostRight = 0
-        self.mostTop = 0
-        self.mostBottom = 0
+    def analyseNode(self, node, countChildren):
 
-        bbox = node.bounding_box()
-        if self.mostRight == 0 or (bbox.left + bbox.width) > self.mostRight:
-            self.mostRight = bbox.left + bbox.width
+        if node.typename == 'TextElement':
+            # WORKAROUND FOR A INKSCAPE BBOX BUG
+            for tspan in node.xpath('//svg:tspan', namespaces=inkex.NSS):
+                node.attrib["x"] = tspan.attrib["x"]
+                node.attrib["y"] = tspan.attrib["y"]
 
-        if self.mostBottom == 0 or (bbox.top + bbox.height) > self.mostBottom:
-            self.mostBottom = bbox.top + bbox.height
+                if "x" not in node.attrib or "y" not in node.attrib:
+                    logging.debug("REPAIRING MISSING TEXT  X,Y")
+                    node.attrib["x"] = tspan.attrib["x"]
+                    node.attrib["y"] = tspan.attrib["y"]
 
-        if self.mostLeft == 0 or bbox.left < self.mostLeft:
-            self.mostLeft = bbox.left
+                if node.attrib["x"] != tspan.attrib["x"] or node.attrib["y"] != tspan.attrib["y"]:
+                    logging.debug("REPAIRING TEXT X,Y, NON EQ WITH TSPAN X,Y")
 
-        if self.mostTop == 0 or bbox.top < self.mostTop:
-            self.mostTop = bbox.top
+                    node.attrib["x"] = tspan.attrib["x"]
+                    node.attrib["y"] = tspan.attrib["y"]
+
+            if countChildren == 1:
+                for tspan in node.xpath('//svg:tspan', namespaces=inkex.NSS):
+                    # GET FONT SIZE FOR CHANGING TEXT Y POSITION BASED ON FONT SIZE
+                    font_size = "0"
+
+                    if "font-size" in node.attrib:
+                        logging.debug("FONT SIZE IN ATTRIB")
+                        logging.debug(node.attrib["font-size"])
+                        font_size = node.attrib["font-size"].replace("px","")
+                    elif "style" in node.attrib and "font-size" in node.attrib["style"]:
+                        logging.debug("FONT SIZE IN STYLE")
+                        logging.debug(node.attrib["style"].split("font-size")[1].split(";")[0])
+                        font_size = node.attrib["style"].split("font-size")[1].split(";")[0].replace(":","").replace("px","")
+
+                    tspan.attrib["y"] = str(self.makeFloat(tspan.attrib["y"]) - self.makeFloat(font_size))
+                    break
+
+        bbox = node.shape_box()
+        if not bbox:
+            return
+
+        logging.debug(['typename',node.typename])
+        logging.debug(['shape_box',node.shape_box()])
+
+        left = bbox.left
+        top = bbox.top
+        width = bbox.width
+        height = bbox.height
+
+        if self.mostRight == 0 or (left + width) > self.mostRight:
+            self.mostRight = left + width
+
+        if self.mostBottom == 0 or (top + height) > self.mostBottom:
+            self.mostBottom = top + height
+
+        if self.mostLeft == 0 or left < self.mostLeft:
+            self.mostLeft = left
+
+        if self.mostTop == 0 or top < self.mostTop:
+            self.mostTop = top
 
     def makeFloat(self, var):
         if var is None:
