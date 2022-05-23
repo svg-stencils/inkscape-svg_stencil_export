@@ -114,7 +114,7 @@ class SVGStencilExporter(inkex.Effect):
 
         counter = 0
         # For each layer export a file
-        for (layer_id, layer_label, layer_type, parents) in layers:
+        for (layer_id, layer_label, layer_type, parents, translate_x, translate_y) in layers:
             counter += 1
             show_layer_ids = [layer[0] for layer in layers or layer[0] == layer_id]
 
@@ -134,10 +134,12 @@ class SVGStencilExporter(inkex.Effect):
             # Add to extra componentData for json
             components_data[file_name] = {
                     "type": layer_type,
-                    "top": temporary_file['top'],
-                    "bottom": temporary_file['bottom'],
-                    "left": temporary_file['left'],
-                    "right": temporary_file['right']
+                    "top": (temporary_file['top'] + self.makeFloat(translate_y)),
+                    "bottom": (temporary_file['bottom'] + self.makeFloat(translate_y)),
+                    "left": (temporary_file['left'] + self.makeFloat(translate_x)),
+                    "right": (temporary_file['right'] + self.makeFloat(translate_x)),
+                    "translate_x": self.makeFloat(translate_x),
+                    "translate_y": self.makeFloat(translate_y),
                     }
 
             # Check if the file exists. If not, export it.
@@ -152,6 +154,7 @@ class SVGStencilExporter(inkex.Effect):
                 # Clean up - delete the temporary file we have created
                 os.remove(temporary_file["name"])
 
+        self.delete_temp_elements()
         self.writeComponentsJson(options, components_list, components_data)
         self.writeMetaJson(options)
         self.writeGitHubAction(options)
@@ -191,6 +194,15 @@ class SVGStencilExporter(inkex.Effect):
 
 
 
+    def delete_temp_elements(self):
+        temp_elements = self.document.xpath('//svg:path[@inkscape:label="temp_for_stencil_export"]', namespaces=inkex.NSS)
+        logging.debug("  temp_elements: [{}]".format(temp_elements))
+
+        for temp_element in temp_elements:
+            logging.debug("  delete temp element: [{}]".format(temp_element))
+            temp_element.getparent().remove(temp_element)
+
+
     def get_layers(self):
 
         svg_layers = self.document.xpath('//svg:g[@inkscape:groupmode="layer"]', namespaces=inkex.NSS)
@@ -207,6 +219,14 @@ class SVGStencilExporter(inkex.Effect):
                 if 'display:none' in layer.attrib['style']:
                     logging.debug("  Skip: [{}]".format(layer.attrib[label_attrib_name]))
                     continue
+
+            ## HANDLE TRANSFORM TRANSLATE
+            translate_x = 0.0
+            translate_y = 0.0
+            if "transform" in layer.attrib:
+                if "translate" in layer.attrib["transform"]:
+                    translate_x ,translate_y = layer.attrib["transform"].replace("translate","").replace("(","").replace(")","").split(",")
+                    logging.debug("  Layer has translate: x[{}] y[{}]".format(translate_x, translate_y))
 
             # Get layer parents, if any
             parents = []
@@ -227,22 +247,22 @@ class SVGStencilExporter(inkex.Effect):
             if insensitive_name in layer.attrib:
                 if 'true' in layer.attrib[insensitive_name]:
                     layer_type = "locked"
-                    self.draw_start_rect(layer)
+                    self.draw_start_rect(layer, translate_x, translate_y)
 
             layer_id = layer.attrib["id"]
             layer_label = layer.attrib[label_attrib_name]
 
             logging.debug("  Use : [{}, {}]".format(layer_label, layer_type))
-            layers.append([layer_id, layer_label, layer_type, parents])
+            layers.append([layer_id, layer_label, layer_type, parents, translate_x, translate_y])
 
         logging.debug("  TOTAL NUMBER OF LAYERS: {}\n".format(len(layers)))
         return layers
 
-    def draw_start_rect(self, parent):
-        x1 = 1
-        y1 = 2
-        x2 = 1
-        y2 = 2
+    def draw_start_rect(self, parent, translate_x, translate_y):
+        x1 = 1.0 - self.makeFloat(translate_x)
+        y1 = 2.0 - self.makeFloat(translate_y)
+        x2 = 1.0 - self.makeFloat(translate_x)
+        y2 = 2.0 - self.makeFloat(translate_y)
 
         line_style   = { 'stroke': '#000000',
                          'stroke-width': str(1),
@@ -250,7 +270,7 @@ class SVGStencilExporter(inkex.Effect):
                        }
 
         line_attribs = {'style' : str(inkex.Style(line_style)),
-                        inkex.addNS('label','inkscape') : "none",
+                        inkex.addNS('label','inkscape') : "temp_for_stencil_export",
 
                         'd' : 'M '+str(x1) +',' +
                         str(y1) +' L '+str(x2)
