@@ -14,11 +14,6 @@ import json
 class Options():
     def __init__(self, svg_stencil_exporter):
 
-        # self.mostLeft = 0
-        # self.mostRight = 0
-        # self.mostTop = 0
-        # self.mostBottom = 0
-
         self.current_file = svg_stencil_exporter.options.input_file
 
         self.stencil_name = svg_stencil_exporter.options.stencil_name
@@ -76,7 +71,6 @@ class SVGStencilExporter(inkex.Effect):
 
         # Controls page
         self.arg_parser.add_argument("--path", action="store", type=str, dest="path", default="", help="export path")
-        #self.arg_parser.add_argument("--use-background-layers", action="store", type=str, dest="use_background_layers", default=False, help="")
         self.arg_parser.add_argument("--overwrite-files", action="store", type=str, dest="overwrite_files", default=False, help="")
         self.arg_parser.add_argument("--use-logging", action="store", type=str, dest="use_logging", default=False, help="")
 
@@ -347,8 +341,37 @@ class SVGStencilExporter(inkex.Effect):
     # gather bounding box info to export
     def analyseNode(self, node, countChildren):
 
+        if node.typename == 'Group':
+            countChildren = 0
+            for groupChild in node.iterchildren():
+                countChildren += 1
+
+            for groupChild in node.iterchildren():
+                logging.debug("    CHILD: {}\n".format(groupChild.typename))
+                self.analyseNode(groupChild, countChildren)
+        else:
+            self.getMaxGeo(node, countChildren)
+
+    def getMaxGeo(self, node, countChildren):
+
+        temp_store_style = ""
+        temp_store_filter = ""
+
+        if "style" in node.attrib and "filter" in node.attrib["style"]:
+            temp_store_style = node.attrib["style"]
+
+            logging.debug("DISABLE FILTER FROM STYLE")
+            logging.debug(node.attrib["style"])
+            node.attrib["style"] = node.attrib["style"].replace("filter","disabled_filter")
+            logging.debug(node.attrib["style"])
+
+        if "filter" in node.attrib:
+            temp_store_filter = node.attrib["filter"]
+            node.attrib["filter"] = ""
+            logging.debug("REMOVE FILTER")
+
         if node.typename == 'TextElement':
-            # WORKAROUND FOR A INKSCAPE BBOX BUG
+            # WORKAROUNDS FOR A INKSCAPE BBOX BUG
             for tspan in node.xpath('//svg:tspan', namespaces=inkex.NSS):
                 node.attrib["x"] = tspan.attrib["x"]
                 node.attrib["y"] = tspan.attrib["y"]
@@ -404,6 +427,7 @@ class SVGStencilExporter(inkex.Effect):
 
         if self.mostTop == 0 or top < self.mostTop:
             self.mostTop = top
+
 
     def makeFloat(self, var):
         if var is None:
