@@ -49,6 +49,12 @@
       <param name="create-readme" type="bool" gui-text="Create README.md" indent="1">false</param>
       <param name="create-github-action" type="bool" gui-text="Create GitHub Pages Action Workflow" indent="1">false</param>
       <param name="create-gitlab-action" type="bool" gui-text="Create GitLab Pages CI file" indent="1">false</param>
+
+      <separator/>
+      <spacer/>
+      <param name="update-parent-index" type="bool" gui-text="Update Parent Index" gui-description="Treats this stencil as part of a set. Creates or updates a index.html one directory higher" indent="1">false</param>
+      <param name="copy-parent-meta-stencils-json" type="bool" gui-text="Use stencil-meta.json from parent directory" gui-description="Don't write stencil-meta.json but copy it from parent directory" indent="1">false</param>
+
     </page>
 
     <page name="about" gui-text="About">

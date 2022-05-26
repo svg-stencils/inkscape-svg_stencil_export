@@ -10,6 +10,8 @@ import shutil
 import copy
 import logging
 import json
+import glob
+import shutil
 
 class Options():
     def __init__(self, svg_stencil_exporter):
@@ -28,6 +30,8 @@ class Options():
         self.write_components = self._str_to_bool(svg_stencil_exporter.options.write_components)
         self.create_cover_page = self._str_to_bool(svg_stencil_exporter.options.create_cover_page)
         self.create_readme = self._str_to_bool(svg_stencil_exporter.options.create_readme)
+        self.update_parent_index = self._str_to_bool(svg_stencil_exporter.options.update_parent_index)
+        self.copy_parent_meta_stencils_json = self._str_to_bool(svg_stencil_exporter.options.copy_parent_meta_stencils_json)
 
         self.output_path = os.path.normpath(svg_stencil_exporter.options.path)
         self.overwrite_files = self._str_to_bool(svg_stencil_exporter.options.overwrite_files)
@@ -80,6 +84,8 @@ class SVGStencilExporter(inkex.Effect):
         self.arg_parser.add_argument("--create-gitlab-action", action="store", type=str, dest="create_gitlab_action", default=False, help="")
         self.arg_parser.add_argument("--create-cover-page", action="store", type=str, dest="create_cover_page", default=False, help="")
         self.arg_parser.add_argument("--create-readme", action="store", type=str, dest="create_readme", default=False, help="")
+        self.arg_parser.add_argument("--update-parent-index", action="store", type=str, dest="update_parent_index", default=False, help="")
+        self.arg_parser.add_argument("--copy-parent-meta-stencils-json", action="store", type=str, dest="copy_parent_meta_stencils_json", default=False, help="")
 
 
         # HACK - the script is called with a "--tab controls" option as an argument from the notebook param in the inx file.
@@ -155,6 +161,8 @@ class SVGStencilExporter(inkex.Effect):
         self.writeGitlabAction(options)
         self.writeMarkdown(options)
         self.writeHTML(options, components_list)
+        self.writeParentHTML(options)
+        self.copyParentMetaJSON(options)
 
         logging.debug("===============================\n\nSTENCIL EXPORT FINSISHED:\n")
 
@@ -543,11 +551,9 @@ License: {options.stencil_license_url}
             mdfile.write(indexmd)
             mdfile.close()
 
-    ########################
-    ########################
-
     def writeHTML(self, options, components_list):
         if options.create_cover_page:
+
             htmldesc = options.stencil_description.replace("\\n","<br>")
 
             htmljs = '''
@@ -596,6 +602,75 @@ License: {options.stencil_license_url}
 </html>
 """
             destination_indexhtml = os.path.join(options.output_path , "index.html")
+
+            htmlfile = open(destination_indexhtml, 'w')
+            htmlfile.write(indexhtml)
+            htmlfile.close()
+
+    ########################
+    ########################
+
+    def copyParentMetaJSON(self, options):
+        if options.copy_parent_meta_stencils_json:
+            parent_dir = os.path.dirname(options.output_path)
+            parent_meta_json = os.path.join(parent_dir, "stencil-meta.json")
+            if os.path.exists(parent_meta_json):
+                shutil.copyfile(parent_meta_json, os.path.join(options.output_path,"stencil-meta.json"))
+
+    def writeParentHTML(self, options ):
+        if options.update_parent_index:
+
+            parent_dir = os.path.dirname(options.output_path)
+            parent_meta_json = os.path.join(parent_dir, "stencil-meta.json")
+
+            stencil_dirs = glob.glob(parent_dir+'/*/stencil-meta.json', recursive=True)
+            logging.debug("  Glob: {}".format(stencil_dirs))
+
+            jsstr = '''
+fetch("./stencil-meta.json")
+  .then(response => response.json())
+  .then((json) => {
+    console.log(json)
+    if(json.name){
+    document.title = json.name
+        document.getElementById("jsonTitle").innerHTML = json.name
+    }
+
+    if(json.description) document.getElementById("jsonDesc").innerHTML = json.description
+    if(json.author) document.getElementById("jsonAuthor").innerHTML = "Author: " + json.author
+  });
+'''
+
+            stencil_str=""
+            for stencildir in stencil_dirs:
+                stencil = os.path.basename(os.path.dirname(stencildir))
+                stencil_str=stencil_str + '<li><a href="./'+stencil+'">'+stencil+'</a></li>'
+
+
+            indexhtml = f"""<html>
+  <head>
+    <title>STENCILS</title>
+    <script>
+    {jsstr}
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="container">
+      <h1 id="jsonTitle"></h1>
+      <p><span id="jsonAuthor"></span><br/></p>
+        <p id="jsonDesc"></p>
+    <hr>
+      <div class="row m-3">
+      <ul>
+          {stencil_str}
+      </ul>
+      </div>
+    </div>
+  </body>
+</html>
+"""
+            destination_indexhtml = os.path.join(parent_dir , "index.html")
 
             htmlfile = open(destination_indexhtml, 'w')
             htmlfile.write(indexhtml)
